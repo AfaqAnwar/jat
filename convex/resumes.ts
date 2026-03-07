@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireOwnership } from "./lib/auth";
-import { starResume } from "./lib/resume-defaults";
+import { starResume } from "./lib/resumeDefaults";
 
 export const list = query({
   args: {},

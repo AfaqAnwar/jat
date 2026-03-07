@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
-import { syncResumeStarsForLatestPref } from "./lib/resume-defaults";
+import { syncResumeStarsForLatestPref } from "./lib/resumeDefaults";
 
 export const get = query({
   args: {},
