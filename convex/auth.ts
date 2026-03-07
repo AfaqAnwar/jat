@@ -4,6 +4,8 @@ import { convexAuth } from "@convex-dev/auth/server";
 
 const ALLOWED_REDIRECT_ORIGINS = [
   process.env.SITE_URL!,
+  "https://justanotherjobtracker.com",
+  "https://www.justanotherjobtracker.com",
   "https://afaqanwar.github.io",
   "http://localhost:5173",
 ];
