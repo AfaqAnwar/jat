@@ -47,7 +47,7 @@ jat/
 ## Code style
 
 - TypeScript strict mode is enabled.
-- ESLint is configured. Run `bun lint` (or `npm run lint`) before committing.
+- ESLint is configured. Run `bun lint` before committing.
 - No comments that simply narrate what the code does. Comments should explain *why*, not *what*.
 - Follow existing naming conventions: `kebab-case` for files, `camelCase` for functions/variables, `PascalCase` for components and types.
 

@@ -50,7 +50,7 @@ bun install        # or npm install
 #### 2. Set up Convex
 
 ```bash
-npx convex dev     # creates a new project & starts the dev server
+bunx convex dev    # creates a new project & starts the dev server
 ```
 
 This will create a `.env.local` file with your `CONVEX_DEPLOYMENT` and `VITE_CONVEX_URL`.
@@ -76,10 +76,10 @@ For Google OAuth, create credentials at [console.cloud.google.com](https://conso
 
 ```bash
 # Terminal 1
-npx convex dev
+bunx convex dev
 
 # Terminal 2
-bun dev            # or npm run dev
+bun dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
@@ -101,7 +101,7 @@ Set `VITE_CONVEX_URL` as an environment variable and use `bun run build` as the 
 #### 6. Deploy the Convex backend
 
 ```bash
-npx convex deploy
+bunx convex deploy
 ```
 
 ### Deployment Notes
