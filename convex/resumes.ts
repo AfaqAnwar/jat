@@ -17,6 +17,17 @@ export const list = query({
 export const getUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    // Verify the storage ID belongs to one of the user's resumes
+    const resume = await ctx.db
+      .query("resumes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const ownsFile = resume.some((r) => r.storageId === storageId);
+    if (!ownsFile) return null;
+
     return ctx.storage.getUrl(storageId);
   },
 });
@@ -107,6 +118,18 @@ export const remove = mutation({
     if (!userId) throw new Error("Not authenticated");
     const resume = await ctx.db.get(id);
     if (!resume || resume.userId !== userId) throw new Error("Not found");
+
+    // Clear resumeId from jobs that used this resume (resumeName is retained)
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const job of jobs) {
+      if (job.resumeId === id) {
+        await ctx.db.patch(job._id, { resumeId: undefined });
+      }
+    }
+
     await ctx.storage.delete(resume.storageId);
     await ctx.db.delete(id);
   },

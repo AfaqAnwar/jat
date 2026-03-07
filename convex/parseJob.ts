@@ -1,206 +1,193 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  normalizeLocation,
+  cleanLocationName,
+  extractSalaryRange,
+  resolveRelativeDate,
+  htmlToText,
+  coerceLocationList,
+  splitRoleAndSector,
+} from "./lib/normalize";
 
-const STATE_TO_ABBR: Record<string, string> = {
-  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-  colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-  hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-  kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-  massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS",
-  missouri: "MO", montana: "MT", nebraska: "NE", nevada: "NV",
-  "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
-  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK",
-  oregon: "OR", pennsylvania: "PA", "rhode island": "RI", "south carolina": "SC",
-  "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT", vermont: "VT",
-  virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-  wyoming: "WY", "district of columbia": "DC",
+type LocType = "onsite" | "remote" | "hybrid";
+
+type ParseResult = {
+  role: string;
+  sector: string;
+  company: string;
+  salary: string;
+  locations: string[];
+  locationType: LocType;
+  datePosted: string;
+  error?: string;
 };
 
-function normalizeLocation(loc: string): string {
-  if (!loc) return loc;
+const EMPTY_RESULT: ParseResult = {
+  role: "",
+  sector: "",
+  company: "",
+  salary: "",
+  locations: [],
+  locationType: "onsite",
+  datePosted: "",
+};
 
-  if (/^(remote|hybrid)/i.test(loc)) {
-    const match = loc.match(/,\s*([A-Za-z\s]+)$/);
-    if (match) {
-      const abbr = STATE_TO_ABBR[match[1].trim().toLowerCase()];
-      if (abbr) return loc.replace(match[1], ` ${abbr}`);
-    }
-    return loc;
-  }
+const PROMPT_TEMPLATE = `Extract job details from the PRIMARY posting in this text. Ignore sidebars and other listings.
 
-  const parts = loc.split(",");
-  if (parts.length < 2) return loc;
+Return ONLY valid JSON with these fields:
 
-  const last = parts[parts.length - 1].trim();
-  if (/^[A-Z]{2}$/.test(last)) return loc;
+"role" — base job title WITHOUT any comma suffix. Split at the FIRST comma.
+"sector" — ONLY from the job title itself: the part after a comma, or a prefix qualifier (e.g. "Frontend", "Full-Stack"). Do NOT use page categories, tags, or metadata. "" if the title has no sector.
+"company" — the hiring organization. NOT the team/sector.
+"salary" — base pay ONLY: "$XXX,XXX - $XXX,XXX" for ranges, or "$XXX,XXX" for a single figure. No /yr, no equity, no benefits, no "(Annual)". "" if not found.
+"locations" — array of "City, ST" (2-letter state). No "Remote"/"Hybrid" here. [] if none.
+"workModel" — "onsite", "remote", or "hybrid".
+"datePosted" — as written (e.g. "1 week ago") or "". Do NOT guess.
 
-  const abbr = STATE_TO_ABBR[last.toLowerCase()];
-  if (!abbr) return loc;
+Examples of role/sector splitting:
+  "Software Engineer, Frontend" → role: "Software Engineer", sector: "Frontend"
+  "Software Engineer, Payments" → role: "Software Engineer", sector: "Payments"
+  "Software Engineer, Roku" → role: "Software Engineer", sector: "Roku"
+  "Full-Stack Software Engineer II (JavaScript)" → role: "Software Engineer II", sector: "Full-Stack"
+  "Frontend Engineer" → role: "Engineer", sector: "Frontend"
+  "Backend Software Engineer" → role: "Software Engineer", sector: "Backend"
+  "Software Engineer" → role: "Software Engineer", sector: ""
+  "Software Engineer - All Levels" → role: "Software Engineer - All Levels", sector: ""
+  "Senior Data Analyst" → role: "Senior Data Analyst", sector: ""
+  "Artist's Marketing Assistant" → role: "Marketing Assistant", sector: "" (page tags like "Graphic Design, Marketing/Ad/Sales" are NOT sector)
+  "Software Development Engineer" → role: "Software Development Engineer", sector: "" (do NOT use page categories like "Engineering" as sector)
 
-  const city = parts[parts.length - 2]?.trim();
-  if (!city || city.length < 2 || city.length > 40) return loc;
+Examples of salary cleaning:
+  "$143,200.00/yr - $284,000.00/yr" → "$143,200 - $284,000"
+  "$150,000-$230,000+ target equity + benefits" → "$150,000 - $230,000"
+  "$150K/yr - $250K/yr" → "$150,000 - $250,000"
+  "$65000 (Annual)" → "$65,000"
+  "$65,000" → "$65,000" (single figure, do NOT duplicate into a range)
 
-  return [...parts.slice(0, -1), ` ${abbr}`].join(",");
-}
-
-function resolveRelativeDate(raw: string): string {
-  const text = raw.toLowerCase().trim();
-  const match = text.match(/(\d+)\s*(day|week|month|hour|minute)s?\s*ago/);
-  if (!match) return "";
-
-  const amount = parseInt(match[1], 10);
-  const unit = match[2];
-  const now = new Date();
-
-  if (unit === "day") now.setDate(now.getDate() - amount);
-  else if (unit === "week") now.setDate(now.getDate() - amount * 7);
-  else if (unit === "month") now.setMonth(now.getMonth() - amount);
-  else if (unit === "hour") now.setHours(now.getHours() - amount);
-  else if (unit === "minute") now.setMinutes(now.getMinutes() - amount);
-
-  return now.toISOString().split("T")[0];
-}
+Text:
+`;
 
 export const fromUrl = action({
   args: { url: v.string() },
   handler: async (_ctx, { url }) => {
-    type LocType = "onsite" | "remote" | "hybrid";
-    const empty = { role: "", sector: "", company: "", salary: "", locations: [] as string[], locationType: "onsite" as LocType, datePosted: "" };
+    const page = await fetchPageText(url);
+    if ("error" in page) return { ...EMPTY_RESULT, error: page.error };
 
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; JobTracker/1.0; +https://github.com)",
-        },
-      });
-    } catch {
-      return empty;
-    }
+    const aiResult = await callGemini(page.text);
+    if (!aiResult) return { ...EMPTY_RESULT, error: "parse" };
 
-    if (!response.ok) return empty;
-
-    const html = await response.text();
-    if (!html || html.length < 200) return empty;
-
-    let text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
-      .replace(/<header[\s\S]*?<\/header>/gi, "")
-      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-      .replace(/<aside[\s\S]*?<\/aside>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (text.length < 100) return empty;
-
-    if (text.length > 6000) {
-      const aboutIdx = text.search(/about (the|this) (role|job|position)/i);
-      if (aboutIdx > 0 && aboutIdx < 3000) {
-        text = text.slice(Math.max(0, aboutIdx - 500));
-      }
-    }
-    text = text.slice(0, 6000);
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return empty;
-
-    const prompt = `This text is from a SINGLE job posting page. It may contain sidebar content or other job listings — IGNORE those. Extract details ONLY for the PRIMARY job being described in detail.
-
-Return ONLY a JSON object:
-- "role": core job title only (e.g. "Software Engineer"). Remove team/department/platform suffixes.
-- "sector": team, department, or platform IF it appears as a comma-separated suffix in the job title (e.g. "Software Engineer, Payments" → sector is "Payments", "Software Engineer, Roku" → sector is "Roku"). "" if the title has no such suffix.
-- "company": the ORGANIZATION that posted the job — look for the company name in the page header, "About [Company]" section, careers URL, or footer. Do NOT use the sector/team/platform as the company. For example, "Software Engineer, Roku" at Paramount → company is "Paramount", NOT "Roku".
-- "salary": annual base salary as a clean USD range. Format: "$XXX,XXX - $XXX,XXX". Remove /yr, /year, /hr, K (convert to thousands). No bonus/equity/benefits. "" if not found.
-- "locations": array of ALL physical work locations for this role. ALWAYS use 2-letter state abbreviations: "City, ST" (e.g. "New York, NY" NOT "New York, New York"). Use the canonical short city name — "New York, NY" not "New York City, NY". Strip "Metropolitan Area" or "Metro" suffixes. Do NOT include "Remote" or "Hybrid" as a location — those go in workModel. Primary location FIRST. [] if not found.
-- "workModel": one of "onsite", "remote", or "hybrid". "hybrid" = mix of office and home (e.g. "3 days in office", "some days on site"). "remote" = fully remote, no office required. "onsite" = fully in-office or if not explicitly stated. Default to "onsite" if unclear.
-- "datePosted": posting date or relative time exactly as written (e.g. "1 week ago"). "" if not found.
-
-Rules:
-- Only extract from the MAIN job description, not sidebar listings or "similar jobs".
-- Salary must be clean numbers: "$143,200 - $284,000" not "$143,200.00/yr - $284,000.00/yr".
-- Do NOT invent or guess any values.
-- If this text does NOT contain a job posting, return all fields as "".
-
-Text:
-${text}`;
-
-    let geminiResponse: Response;
-    try {
-      geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b-it:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        },
-      );
-    } catch {
-      return empty;
-    }
-
-    if (!geminiResponse.ok) return empty;
-
-    const data = await geminiResponse.json();
-    const resultText =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-
-    try {
-      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return empty;
-      const parsed = JSON.parse(jsonMatch[0]);
-
-      const rawDate = parsed.datePosted ?? "";
-      const datePosted = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
-        ? rawDate
-        : resolveRelativeDate(rawDate);
-
-      const rawSalary = (parsed.salary ?? "").replace(/\.00/g, "");
-
-      const rawLocations = parsed.locations ?? parsed.location ?? [];
-      const rawList: string[] = Array.isArray(rawLocations)
-        ? rawLocations.filter((l: unknown) => typeof l === "string" && l)
-        : typeof rawLocations === "string" && rawLocations
-          ? [rawLocations]
-          : [];
-      const normalized = rawList.map(normalizeLocation);
-
-      const locations = normalized.map((l) => {
-        return l
-          .replace(/^remote\s*[-—–]?\s*/i, "")
-          .replace(/^hybrid\s*[-—–]?\s*/i, "")
-          .replace(/^\(/, "")
-          .replace(/\)$/, "")
-          .replace(/\s*(Metropolitan Area|Metro Area|Metro)\s*/gi, "")
-          .replace(/New York City/gi, "New York")
-          .trim();
-      }).filter(Boolean);
-
-      const rawModel = (parsed.workModel ?? "").toLowerCase();
-      let locationType: LocType = "onsite";
-      if (rawModel === "remote") locationType = "remote";
-      else if (rawModel === "hybrid") locationType = "hybrid";
-
-      if (locations.length === 0 && locationType === "remote") {
-        locations.push("US");
-      }
-
-      return {
-        role: parsed.role ?? "",
-        sector: parsed.sector ?? "",
-        company: parsed.company ?? "",
-        salary: rawSalary,
-        locations,
-        locationType,
-        datePosted,
-      };
-    } catch {
-      return empty;
-    }
+    return normalizeAiResult(aiResult);
   },
 });
+
+type FetchResult = { text: string } | { error: string };
+
+async function fetchPageText(url: string): Promise<FetchResult> {
+  const isSpaHash = url.includes("#/") || url.includes("#!/");
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; JobTracker/1.0; +https://github.com)",
+      },
+    });
+  } catch {
+    return { error: "fetch" };
+  }
+
+  if (!response.ok) return { error: "fetch" };
+
+  const html = await response.text();
+  if (!html || html.length < 200) return { error: "empty" };
+
+  let text = htmlToText(html);
+
+  if (text.length < 100) {
+    return { error: isSpaHash ? "spa" : "empty" };
+  }
+
+  if (text.length > 6000) {
+    const aboutIdx = text.search(/about (the|this) (role|job|position)/i);
+    if (aboutIdx > 0 && aboutIdx < 3000) {
+      text = text.slice(Math.max(0, aboutIdx - 500));
+    }
+  }
+
+  return { text: text.slice(0, 6000) };
+}
+
+async function callGemini(text: string): Promise<Record<string, unknown> | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b-it:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: PROMPT_TEMPLATE + text }] }],
+        }),
+      },
+    );
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+
+  try {
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeAiResult(parsed: Record<string, unknown>) {
+  const rawDate = String(parsed.datePosted ?? "");
+  const datePosted = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+    ? rawDate
+    : resolveRelativeDate(rawDate);
+
+  const salary = extractSalaryRange(String(parsed.salary ?? ""));
+
+  const rawLocations = coerceLocationList(parsed.locations ?? parsed.location);
+  const locations = rawLocations
+    .map(normalizeLocation)
+    .map(cleanLocationName)
+    .filter(Boolean);
+
+  const rawModel = String(parsed.workModel ?? "").toLowerCase();
+  let locationType: LocType = "onsite";
+  if (rawModel === "remote") locationType = "remote";
+  else if (rawModel === "hybrid") locationType = "hybrid";
+
+  if (locations.length === 0 && locationType === "remote") {
+    locations.push("US");
+  }
+
+  const { role, sector } = splitRoleAndSector(
+    String(parsed.role ?? ""),
+    String(parsed.sector ?? ""),
+  );
+
+  return {
+    role,
+    sector,
+    company: String(parsed.company ?? ""),
+    salary,
+    locations,
+    locationType,
+    datePosted,
+  };
+}

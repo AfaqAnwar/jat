@@ -16,7 +16,10 @@ export const list = query({
     return Promise.all(
       jobs.map(async (job) => {
         const resume = job.resumeId ? await ctx.db.get(job.resumeId) : null;
-        return { ...job, resumeName: resume?.name ?? null };
+        return {
+          ...job,
+          resumeName: resume?.name ?? job.resumeName ?? null,
+        };
       }),
     );
   },
@@ -49,6 +52,13 @@ export const add = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    let resumeName: string | undefined;
+    if (args.resumeId) {
+      const resume = await ctx.db.get(args.resumeId);
+      resumeName = resume?.name;
+    }
+
     return ctx.db.insert("jobs", {
       ...args,
       sector: args.sector || undefined,
@@ -56,6 +66,7 @@ export const add = mutation({
       location: args.location || undefined,
       locationType: args.locationType || undefined,
       datePosted: args.datePosted || undefined,
+      resumeName,
       userId,
     });
   },
@@ -92,9 +103,18 @@ export const update = mutation({
     if (!userId) throw new Error("Not authenticated");
     const job = await ctx.db.get(id);
     if (!job || job.userId !== userId) throw new Error("Not found");
-    const updates = Object.fromEntries(
-      Object.entries(fields).filter(([_, v]) => v !== undefined),
+
+    const updates: Record<string, unknown> = Object.fromEntries(
+      Object.entries(fields).filter(([, v]) => v !== undefined),
     );
+
+    if (fields.resumeId) {
+      const resume = await ctx.db.get(fields.resumeId);
+      if (resume) {
+        updates.resumeName = resume.name;
+      }
+    }
+
     if (Object.keys(updates).length > 0) {
       await ctx.db.patch(id, updates);
     }

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import type { ResumeId } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -47,9 +48,9 @@ export function ResumeManager({
 
   const [uploading, setUploading] = useState(false);
   const [hasFile, setHasFile] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<ResumeId | null>(null);
   const [editName, setEditName] = useState("");
-  const [pendingResumeId, setPendingResumeId] = useState<Id<"resumes"> | null>(null);
+  const [pendingResumeId, setPendingResumeId] = useState<ResumeId | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const mobileFileRef = useRef<HTMLInputElement>(null);
 
@@ -115,21 +116,21 @@ export function ResumeManager({
     toast.success("New uploads will always be the default");
   };
 
-  const handleRename = async (id: string) => {
+  const handleRename = async (id: ResumeId) => {
     if (!editName.trim()) return;
-    await renameResume({ id: id as Parameters<typeof renameResume>[0]["id"], name: editName.trim() });
+    await renameResume({ id, name: editName.trim() });
     setEditingId(null);
     toast.dismiss();
     toast.success("Renamed");
   };
 
-  const handleDelete = async (id: Parameters<typeof removeResume>[0]["id"]) => {
+  const handleDelete = async (id: ResumeId) => {
     await removeResume({ id });
     toast.dismiss();
     toast.success("Resume deleted");
   };
 
-  const handleSetDefault = async (id: Id<"resumes">) => {
+  const handleSetDefault = async (id: ResumeId) => {
     await setDefaultResume({ id });
     toast.dismiss();
     toast.success("Set as default");
@@ -144,7 +145,6 @@ export function ResumeManager({
           <DialogTitle>Resumes</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {/* Post-upload prompt */}
           {pendingResumeId && (
             <div className="space-y-2 border p-3">
               <p className="text-sm">Set this as your default resume?</p>
@@ -305,8 +305,8 @@ export function ResumeManager({
   );
 }
 
-function ResumePreviewButton({ storageId }: { storageId: string }) {
-  const url = useQuery(api.resumes.getUrl, { storageId: storageId as Id<"_storage"> });
+function ResumePreviewButton({ storageId }: { storageId: Id<"_storage"> }) {
+  const url = useQuery(api.resumes.getUrl, { storageId });
   if (!url) return null;
   return (
     <a

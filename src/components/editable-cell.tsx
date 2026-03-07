@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { formatDate } from "@/lib/format-date";
 
 export function EditableCell({
   value,
@@ -12,6 +13,7 @@ export function EditableCell({
   placeholder?: string;
   type?: "text" | "date";
 }) {
+  const isDate = type === "date";
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,18 +51,19 @@ export function EditableCell({
             setEditing(false);
           }
         }}
-        className="h-7 w-auto min-w-0 px-1 text-sm"
-        style={{ width: `${Math.max((draft.length + 1) * 0.55, 4)}em` }}
+        className={`h-7 w-full min-w-0 px-1 text-sm${isDate && !draft ? " date-empty" : ""}`}
       />
     );
   }
 
+  const displayValue = isDate ? formatDate(value) : value;
+
   return (
     <span
       onClick={() => setEditing(true)}
-      className="block cursor-pointer truncate rounded px-1 py-0.5 hover:bg-muted"
+      className="-mx-1 block cursor-pointer truncate px-1 py-0.5 hover:bg-muted"
     >
-      {value || placeholder}
+      {displayValue || placeholder}
     </span>
   );
 }

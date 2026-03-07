@@ -159,3 +159,7 @@
     display: none;
   }
 }
+
+input[type="date"].date-empty {
+  color: var(--muted-foreground);
+}

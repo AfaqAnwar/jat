@@ -76,8 +76,7 @@ export function EditableRoleCell({
             }
           }}
           placeholder={field === "role" ? "Role" : "Sector / Team"}
-          className="h-7 w-auto min-w-0 pr-8 text-sm"
-          style={{ width: `${Math.max((role.length + 1) * 0.55 + 2, 5)}em` }}
+          className="h-7 w-full min-w-0 pr-8 text-sm"
         />
         <button
           type="button"
@@ -85,7 +84,7 @@ export function EditableRoleCell({
             e.preventDefault();
             swap();
           }}
-          className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground"
           title={field === "role" ? "Edit sector" : "Edit role"}
         >
           <ArrowsLeftRightIcon size={14} weight="light" />
@@ -102,7 +101,7 @@ export function EditableRoleCell({
       }}
       role="button"
       tabIndex={0}
-      className="block cursor-pointer truncate rounded px-1 py-0.5 hover:bg-muted"
+      className="-mx-1 block cursor-pointer truncate px-1 py-0.5 hover:bg-muted"
     >
       {role || "Untitled Role"}
     </span>

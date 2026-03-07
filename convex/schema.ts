@@ -27,6 +27,7 @@ const schema = defineSchema({
       v.literal("ghosted"),
     ),
     resumeId: v.optional(v.id("resumes")),
+    resumeName: v.optional(v.string()),
   }).index("by_user", ["userId"]),
   resumes: defineTable({
     userId: v.id("users"),
