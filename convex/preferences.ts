@@ -3,6 +3,7 @@ import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { syncResumeStarsForLatestPref } from "./lib/resumeDefaults";
+import { assertValidStateAbbrev } from "./lib/validators";
 
 export const get = query({
   args: {},
@@ -37,6 +38,7 @@ export const setState = mutation({
   args: { state: v.string() },
   handler: async (ctx, { state }) => {
     const userId = await requireAuth(ctx);
+    assertValidStateAbbrev(state);
     await upsertPreferences(ctx, userId, { state: state === "" ? undefined : state });
   },
 });

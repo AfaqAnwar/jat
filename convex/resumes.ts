@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireOwnership } from "./lib/auth";
 import { starResume } from "./lib/resumeDefaults";
+import { assertMaxLength, MAX_SHORT } from "./lib/validators";
+import { rateLimiter } from "./lib/rateLimits";
 
 export const list = query({
   args: {},
@@ -35,7 +37,8 @@ export const getUrl = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    const userId = await requireAuth(ctx);
+    await rateLimiter.limit(ctx, "uploadResume", { key: userId, throws: true });
     return ctx.storage.generateUploadUrl();
   },
 });
@@ -47,6 +50,7 @@ export const save = mutation({
   },
   handler: async (ctx, { name, storageId }) => {
     const userId = await requireAuth(ctx);
+    assertMaxLength(name, MAX_SHORT, "name");
 
     const existing = await ctx.db
       .query("resumes")
@@ -71,6 +75,7 @@ export const rename = mutation({
   },
   handler: async (ctx, { id, name }) => {
     const userId = await requireAuth(ctx);
+    assertMaxLength(name, MAX_SHORT, "name");
     await requireOwnership(ctx, "resumes", id, userId);
     await ctx.db.patch(id, { name });
   },

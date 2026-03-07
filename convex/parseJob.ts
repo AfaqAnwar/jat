@@ -1,6 +1,8 @@
-import { action } from "./_generated/server";
+import { action, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { rateLimiter } from "./lib/rateLimits";
 import {
   normalizeLocation,
   cleanLocationName,
@@ -33,7 +35,29 @@ const EMPTY_RESULT: ParseResult = {
   datePosted: "",
 };
 
-const BLOCKED_HOSTNAMES = /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|0\.0\.0\.0|\[::1?\])$/;
+const BLOCKED_HOSTNAME_PATTERNS = [
+  /^localhost$/,
+  /^127\.\d+\.\d+\.\d+$/,
+  /^10\.\d+\.\d+\.\d+$/,
+  /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+  /^192\.168\.\d+\.\d+$/,
+  /^169\.254\.\d+\.\d+$/,
+  /^0\.0\.0\.0$/,
+  /^\[::1\]$/,
+  /^\[::\]$/,
+  /^\[0{0,4}(:0{0,4}){5}:0{0,4}[01]\]$/,
+  /^\[::ffff:127\.\d+\.\d+\.\d+\]$/,
+  /^\[::ffff:10\.\d+\.\d+\.\d+\]$/,
+  /^\[::ffff:172\.(1[6-9]|2\d|3[01])\.\d+\.\d+\]$/,
+  /^\[::ffff:192\.168\.\d+\.\d+\]$/,
+  /^\[::ffff:169\.254\.\d+\.\d+\]$/,
+  /^\[::ffff:0\.0\.0\.0\]$/,
+];
+
+function isBlockedHostname(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  return BLOCKED_HOSTNAME_PATTERNS.some((re) => re.test(lower));
+}
 
 function validateFetchUrl(raw: string): string {
   let parsed: URL;
@@ -47,8 +71,12 @@ function validateFetchUrl(raw: string): string {
     throw new Error("Only http/https URLs are allowed");
   }
 
-  if (BLOCKED_HOSTNAMES.test(parsed.hostname)) {
+  if (isBlockedHostname(parsed.hostname)) {
     throw new Error("URL points to a blocked address");
+  }
+
+  if (/^\d+$/.test(parsed.hostname)) {
+    throw new Error("Numeric IP addresses are not allowed");
   }
 
   return parsed.href;
@@ -100,11 +128,21 @@ Examples of salary cleaning:
 Text:
 `;
 
+export const checkParseRateLimit = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    await rateLimiter.limit(ctx, "parseJob", { key: userId, throws: true });
+    await rateLimiter.limit(ctx, "globalParse", { throws: true });
+  },
+});
+
 export const fromUrl = action({
   args: { url: v.string() },
   handler: async (ctx, { url }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    await ctx.runMutation(internal.parseJob.checkParseRateLimit, { userId });
 
     let safeUrl: string;
     try {

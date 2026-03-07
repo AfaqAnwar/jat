@@ -1,8 +1,16 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { locationTypeValidator, statusValidator } from "./lib/validators";
+import {
+  locationTypeValidator,
+  statusValidator,
+  assertHttpUrl,
+  assertMaxLength,
+  MAX_SHORT,
+  MAX_URL,
+} from "./lib/validators";
 import { requireAuth, requireOwnership } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 
 export const list = query({
   args: {},
@@ -51,6 +59,15 @@ export const add = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
+    await rateLimiter.limit(ctx, "addJob", { key: userId, throws: true });
+
+    assertHttpUrl(args.url);
+    assertMaxLength(args.url, MAX_URL, "url");
+    assertMaxLength(args.role, MAX_SHORT, "role");
+    assertMaxLength(args.company, MAX_SHORT, "company");
+    assertMaxLength(args.sector, MAX_SHORT, "sector");
+    assertMaxLength(args.salary, MAX_SHORT, "salary");
+    assertMaxLength(args.location, MAX_SHORT, "location");
 
     if (args.resumeId) {
       await requireOwnership(ctx, "resumes", args.resumeId, userId);
@@ -104,6 +121,16 @@ export const update = mutation({
   handler: async (ctx, { id, ...fields }) => {
     const userId = await requireAuth(ctx);
     await requireOwnership(ctx, "jobs", id, userId);
+
+    assertMaxLength(fields.role, MAX_SHORT, "role");
+    assertMaxLength(fields.company, MAX_SHORT, "company");
+    assertMaxLength(fields.sector, MAX_SHORT, "sector");
+    assertMaxLength(fields.salary, MAX_SHORT, "salary");
+    assertMaxLength(fields.location, MAX_SHORT, "location");
+
+    if (fields.resumeId) {
+      await requireOwnership(ctx, "resumes", fields.resumeId, userId);
+    }
 
     const updates = pickDefined<UpdatableJobFields>(fields);
 
