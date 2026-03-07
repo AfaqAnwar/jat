@@ -13,6 +13,7 @@ export const list = query({
     return ctx.db
       .query("resumes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
       .collect();
   },
 });
@@ -57,13 +58,20 @@ export const save = mutation({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
+    const prefs = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    const isAlwaysLatest = prefs?.alwaysUseLatestResume ?? false;
     const hasDefault = existing.some((r) => r.isDefault);
+    const shouldDefault = existing.length === 0 || (!hasDefault && !isAlwaysLatest);
 
     return ctx.db.insert("resumes", {
       userId,
       name,
       storageId,
-      isDefault: !hasDefault ? true : undefined,
+      isDefault: shouldDefault ? true : undefined,
     });
   },
 });

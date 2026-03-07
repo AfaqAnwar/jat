@@ -68,14 +68,16 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
               autoFocus
             />
             {hasMultipleResumes && resumes && (
-              <ResumePickerList
-                resumes={resumes}
-                resumeOverride={resumeOverride}
-                defaultResumeId={defaultResumeId}
-                defaultResumeName={defaultResumeName}
-                onSelect={selectResume}
-                variant="stacked"
-              />
+              <div className="max-h-48 overflow-y-auto">
+                <ResumePickerList
+                  resumes={resumes}
+                  resumeOverride={resumeOverride}
+                  defaultResumeId={defaultResumeId}
+                  defaultResumeName={defaultResumeName}
+                  onSelect={selectResume}
+                  variant="stacked"
+                />
+              </div>
             )}
             <Button
               onClick={() => void handleSubmit()}

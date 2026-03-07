@@ -63,24 +63,24 @@ export function ResumePickerList({
       <button
         onClick={() => onSelect("")}
         aria-pressed={!resumeOverride}
-        className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent"
+        className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent min-w-0"
       >
         <span className="w-4 shrink-0">
           {!resumeOverride && <CheckIcon size={14} weight="light" />}
         </span>
-        Default{defaultResumeName ? ` (${defaultResumeName})` : ""}
+        <span className="truncate">Default{defaultResumeName ? ` (${defaultResumeName})` : ""}</span>
       </button>
       {resumes.map((r) => (
         <button
           key={r._id}
           onClick={() => onSelect(r._id)}
           aria-pressed={resumeOverride === r._id}
-          className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent min-w-0"
         >
           <span className="w-4 shrink-0">
             {resumeOverride === r._id && <CheckIcon size={14} weight="light" />}
           </span>
-          {r.name}
+          <span className="truncate">{r.name}</span>
         </button>
       ))}
     </>

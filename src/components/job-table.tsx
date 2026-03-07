@@ -18,7 +18,7 @@ import { LocationTypeIcon } from "@/components/location-type-icon";
 import { cycleLocationType } from "@/lib/types";
 import { JobDetailModal } from "@/components/job-detail-modal";
 import { TrashIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/lib/toast-utils";
 
 export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) {
   const updateJob = useMutation(api.jobs.update);
@@ -34,18 +34,16 @@ export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) 
   const handleDelete = async (id: JobId) => {
     try {
       await removeJob({ id });
-      toast.dismiss();
-      toast.success("Job removed");
+      showSuccess("Job removed");
     } catch (err) {
       console.error("Failed to delete job:", err);
-      toast.dismiss();
-      toast.error("Failed to delete job");
+      showError("Failed to delete job");
     }
   };
 
   return (
     <>
-      <div className="rounded-none border sm:max-h-full sm:overflow-y-auto sm:overscroll-contain">
+      <div data-slot="table-container" className="rounded-none border sm:max-h-full sm:overflow-y-auto sm:overscroll-contain">
         <Table className="hidden table-fixed sm:table">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>

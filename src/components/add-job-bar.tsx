@@ -51,7 +51,7 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
                 <GearSixIcon size={16} weight="light" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-56 rounded-none p-2">
+            <PopoverContent align="end" className="max-h-64 w-56 overflow-y-auto rounded-none p-2">
               <ResumePickerList
                 resumes={resumes ?? []}
                 resumeOverride={resumeOverride}

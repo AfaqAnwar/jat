@@ -58,7 +58,13 @@ export async function syncResumeStarsForLatestPref(
       .order("desc")
       .first();
     if (latest) {
-      await ctx.db.patch(latest._id, { isDefault: true });
+      for (const r of resumes) {
+        if (r._id === latest._id) {
+          await ctx.db.patch(r._id, { isDefault: true });
+        } else if (r.isDefault) {
+          await ctx.db.patch(r._id, { isDefault: undefined });
+        }
+      }
     }
   }
 }

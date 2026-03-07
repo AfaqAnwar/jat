@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ResumePreviewLink } from "@/components/resume-preview-link";
-import { toast } from "sonner";
+import { showSuccess, showError, checkMaxLength } from "@/lib/toast-utils";
 import { TrashIcon, PencilSimpleIcon, CheckIcon, XIcon, StarIcon } from "@phosphor-icons/react";
 import { formatFileName, deduplicateName } from "@/lib/format-file";
 
@@ -59,16 +59,14 @@ export function ResumeManager({
       if (!result.ok) throw new Error(`Upload failed (${result.status})`);
       const { storageId } = await result.json();
       const id = await saveResume({ name, storageId });
-      toast.dismiss();
-      toast.success(`Uploaded "${name}"`);
+      showSuccess(`Uploaded "${name}"`);
 
       if (hasExistingResumes && !isAlwaysLatest) {
         setPendingResumeId(id);
       }
     } catch (err) {
       console.error("Failed to upload resume:", err);
-      toast.dismiss();
-      toast.error("Failed to upload resume");
+      showError("Failed to upload resume");
     } finally {
       setUploading(false);
     }
@@ -93,46 +91,43 @@ export function ResumeManager({
     if (!pendingResumeId) return;
     await setDefaultResume({ id: pendingResumeId });
     setPendingResumeId(null);
-    toast.dismiss();
-    toast.success("Set as default");
+    showSuccess("Set as default");
   };
 
   const handlePromptAlwaysLatest = async () => {
     await setAlwaysUseLatest({ enabled: true });
     setPendingResumeId(null);
-    toast.dismiss();
-    toast.success("New uploads will always be the default");
+    showSuccess("New uploads will always be the default");
   };
 
   const handleRename = async (id: ResumeId) => {
-    if (!editName.trim()) return;
-    await renameResume({ id, name: editName.trim() });
+    const trimmed = editName.trim();
+    if (!trimmed) return;
+    if (!checkMaxLength(trimmed, "Name")) return;
+    await renameResume({ id, name: trimmed });
     setEditingId(null);
-    toast.dismiss();
-    toast.success("Renamed");
+    showSuccess("Renamed");
   };
 
   const handleDelete = async (id: ResumeId) => {
     await removeResume({ id });
-    toast.dismiss();
-    toast.success("Resume deleted");
+    showSuccess("Resume deleted");
   };
 
   const handleSetDefault = async (id: ResumeId) => {
     await setDefaultResume({ id });
-    toast.dismiss();
-    toast.success("Set as default");
+    showSuccess("Set as default");
   };
 
   const showStars = (resumes?.length ?? 0) > 1 && !isAlwaysLatest;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setPendingResumeId(null); onOpenChange(v); }}>
-      <DialogContent className="rounded-none sm:max-w-md">
+      <DialogContent className="max-h-[85dvh] rounded-none sm:max-w-md flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Resumes</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
           {pendingResumeId && (
             <div className="space-y-2 border p-3">
               <p className="text-sm">Set this as your default resume?</p>
@@ -163,7 +158,7 @@ export function ResumeManager({
           )}
 
           {/* Desktop upload */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden shrink-0 sm:flex items-center gap-2">
             <input
               ref={fileRef}
               type="file"
@@ -181,7 +176,7 @@ export function ResumeManager({
           </div>
 
           {/* Mobile upload */}
-          <div className="sm:hidden">
+          <div className="shrink-0 sm:hidden">
             <input
               ref={mobileFileRef}
               type="file"
@@ -198,7 +193,7 @@ export function ResumeManager({
             </Button>
           </div>
 
-          {isAlwaysLatest && (
+          {isAlwaysLatest && (resumes?.length ?? 0) > 1 && (
             <p className="text-xs text-muted-foreground">
               Using latest upload as default.{" "}
               <button
@@ -212,12 +207,12 @@ export function ResumeManager({
 
           {resumes && resumes.length > 0 && (
             <>
-              <Separator />
-              <ul className="space-y-2">
+              <Separator className="shrink-0" />
+              <ul className="min-h-0 min-w-0 space-y-2 overflow-y-auto">
                 {resumes.map((r) => (
                   <li
                     key={r._id}
-                    className="flex items-center justify-between gap-2 rounded-none border px-3 py-2 text-sm"
+                    className="flex items-center gap-2 rounded-none border px-3 py-2 text-sm min-w-0 overflow-hidden"
                   >
                     {editingId === r._id ? (
                       <div className="flex flex-1 items-center gap-1">
@@ -260,8 +255,13 @@ export function ResumeManager({
                             />
                           </button>
                         )}
-                        <span className="flex-1 truncate">{r.name}</span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex-1 min-w-0">
+                          <span className="block truncate">{r.name}</span>
+                          <span className="block text-[11px] text-muted-foreground/60">
+                            {new Date(r._creationTime).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
                           <ResumePreviewLink storageId={r.storageId} />
                           <button
                             onClick={() => {

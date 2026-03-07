@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { ManualEntry, ManualJobFields } from "@/lib/types";
 import { toast } from "sonner";
+import { showSuccess, showError } from "@/lib/toast-utils";
 import { normalizeUrl } from "@/lib/normalize-url";
 import { getDefaultResumeId } from "@/lib/get-default-resume";
 import { resolveLocation } from "@/lib/resolve-location";
@@ -38,8 +39,7 @@ export function useAddJob() {
   const submit = async (): Promise<boolean> => {
     const normalized = normalizeUrl(url);
     if (!normalized) {
-      toast.dismiss();
-      toast.error("Invalid URL — paste a direct link to a job posting");
+      showError("Invalid URL — paste a direct link to a job posting");
       return false;
     }
 
@@ -114,13 +114,11 @@ export function useAddJob() {
       setUrl("");
       setResumeOverride("");
       setManualEntry(null);
-      toast.dismiss();
-      toast.success(`Added ${fields.role} at ${fields.company}`);
+      showSuccess(`Added ${fields.role} at ${fields.company}`);
       return true;
     } catch (err) {
       console.error("Failed to add job:", err);
-      toast.dismiss();
-      toast.error("Failed to add job");
+      showError("Failed to add job");
       return false;
     }
   };

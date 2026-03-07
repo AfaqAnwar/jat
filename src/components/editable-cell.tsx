@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { formatDate, todayISO } from "@/lib/format-date";
+import { checkMaxLength } from "@/lib/toast-utils";
 
 export function EditableCell({
   value,
@@ -31,6 +32,7 @@ export function EditableCell({
   }, [value]);
 
   const commit = () => {
+    if (!isDate && !checkMaxLength(draft)) return;
     setEditing(false);
     if (draft !== value) {
       onSave(draft);

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { checkMaxLength } from "@/lib/toast-utils";
 
 export function EditableRoleCell({
   role,
@@ -46,6 +47,7 @@ export function EditableRoleCell({
   };
 
   const commitCurrent = () => {
+    if (!checkMaxLength(draft)) return;
     if (field === "role" && draft !== role) onSaveRole(draft);
     if (field === "sector" && draft !== sector) onSaveSector(draft);
   };

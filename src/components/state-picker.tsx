@@ -15,7 +15,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { toast } from "sonner";
+import { showSuccess } from "@/lib/toast-utils";
 import { US_STATES } from "@/lib/us-states";
 
 export function StatePicker({
@@ -36,8 +36,7 @@ export function StatePicker({
   const handleSelect = async (abbr: string) => {
     const next = abbr === currentState ? "" : abbr;
     await setStateMutation({ state: next });
-    toast.dismiss();
-    toast.success(
+    showSuccess(
       next
         ? `Location set to ${US_STATES.find(([a]) => a === next)?.[1] ?? next}`
         : "Location cleared",
