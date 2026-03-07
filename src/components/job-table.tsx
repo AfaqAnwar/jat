@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Job, Resume, JobId, Status, ResumeId } from "@/lib/types";
+import type { Job, Resume, JobId, Status, ResumeId, EditableJobField } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -27,14 +27,20 @@ export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) 
   const [detailJobId, setDetailJobId] = useState<JobId | null>(null);
   const detailJob = detailJobId ? jobs.find((j) => j._id === detailJobId) ?? null : null;
 
-  const handleUpdate = (id: JobId, field: string, value: string) => {
-    void updateJob({ id, [field]: value || undefined });
+  const handleUpdate = (id: JobId, field: EditableJobField, value: string) => {
+    void updateJob({ id, [field]: value === "" ? undefined : value });
   };
 
   const handleDelete = async (id: JobId) => {
-    await removeJob({ id });
-    toast.dismiss();
-    toast.success("Job removed");
+    try {
+      await removeJob({ id });
+      toast.dismiss();
+      toast.success("Job removed");
+    } catch (err) {
+      console.error("Failed to delete job:", err);
+      toast.dismiss();
+      toast.error("Failed to delete job");
+    }
   };
 
   return (
@@ -127,7 +133,7 @@ function DesktopJobRow({
   resumes: Resume[];
   isEditingRole: boolean;
   onEditingRoleChange: (editing: boolean) => void;
-  onUpdate: (id: JobId, field: string, value: string) => void;
+  onUpdate: (id: JobId, field: EditableJobField, value: string) => void;
   onDelete: (id: JobId) => Promise<void>;
   onStatusChange: (status: string) => void;
   onLocationTypeCycle: () => void;

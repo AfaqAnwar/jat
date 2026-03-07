@@ -10,6 +10,7 @@ import {
 import { PlusIcon } from "@phosphor-icons/react";
 import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
+import { ResumePickerList } from "@/components/resume-picker-list";
 
 export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,8 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
     dismissManualEntry();
     setOpen(false);
   };
+
+  const defaultResumeName = resumes?.find((r) => r._id === defaultResumeId)?.name;
 
   return (
     <>
@@ -60,28 +63,13 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
               autoFocus
             />
             {hasMultipleResumes && resumes && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Resume</p>
-                <div className="space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => selectResume("")}
-                    className={`flex w-full items-center gap-2 rounded-none border px-3 py-2 text-left text-sm ${!resumeOverride ? "border-foreground" : "border-border"}`}
-                  >
-                    Default ({resumes.find((r) => r._id === defaultResumeId)?.name ?? "latest"})
-                  </button>
-                  {resumes.map((r) => (
-                    <button
-                      key={r._id}
-                      type="button"
-                      onClick={() => selectResume(r._id)}
-                      className={`flex w-full items-center gap-2 rounded-none border px-3 py-2 text-left text-sm ${resumeOverride === r._id ? "border-foreground" : "border-border"}`}
-                    >
-                      {r.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <ResumePickerList
+                resumes={resumes}
+                resumeOverride={resumeOverride}
+                defaultResumeName={defaultResumeName}
+                onSelect={selectResume}
+                variant="stacked"
+              />
             )}
             <Button
               onClick={() => void handleSubmit()}

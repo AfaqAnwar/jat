@@ -108,9 +108,19 @@ function collapseIdenticalRange(salary: string): string {
   return salary;
 }
 
-/** Convert relative date strings like "2 weeks ago" to ISO date. */
+/** Convert relative date strings like "2 weeks ago", "today", "yesterday" to ISO date. */
 export function resolveRelativeDate(raw: string): string {
   const text = raw.toLowerCase().trim();
+
+  if (/^(today|just now|just posted|posted today)$/.test(text)) {
+    return new Date().toISOString().split("T")[0];
+  }
+  if (/^yesterday$/.test(text)) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split("T")[0];
+  }
+
   const match = text.match(/(\d+)\s*(day|week|month|hour|minute)s?\s*ago/);
   if (!match) return "";
 

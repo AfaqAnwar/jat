@@ -1,20 +1,14 @@
 import type { ReactNode } from "react";
-import type { Job, Resume, JobId, ResumeId } from "@/lib/types";
+import type { Job, Resume, JobId, EditableJobField } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EditableCell } from "@/components/editable-cell";
 import { StatusSelect } from "@/components/status-select";
+import { ResumeSelect } from "@/components/resume-select";
 import { LocationTypeIcon } from "@/components/location-type-icon";
 import { cycleLocationType } from "@/lib/types";
 import { TrashIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
@@ -29,7 +23,7 @@ export function JobDetailModal({
   job: Job | null;
   resumes: Resume[];
   onClose: () => void;
-  onUpdate: (id: JobId, field: string, value: string) => void;
+  onUpdate: (id: JobId, field: EditableJobField, value: string) => void;
   onDelete: (id: JobId) => Promise<void>;
 }) {
   if (!job) return null;
@@ -111,7 +105,7 @@ export function JobDetailModal({
             />
           </DetailRow>
           <DetailRow label="Resume">
-            <ModalResumeSelect
+            <ResumeSelect
               job={job}
               resumes={resumes}
               onUpdate={(resumeId) =>
@@ -146,46 +140,3 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
   );
 }
 
-function ModalResumeSelect({
-  job,
-  resumes,
-  onUpdate,
-}: {
-  job: Job;
-  resumes: Resume[];
-  onUpdate: (resumeId: ResumeId) => void;
-}) {
-  const canEdit = resumes.length >= 1;
-  const isDeleted = !job.resumeId && !!job.resumeName;
-  const nameClass = isDeleted ? "text-muted-foreground/40" : "";
-
-  if (!canEdit) {
-    return (
-      <span className={`truncate ${nameClass || "text-muted-foreground"}`}>
-        {job.resumeName || "—"}
-      </span>
-    );
-  }
-
-  return (
-    <Select
-      value={job.resumeId ?? undefined}
-      onValueChange={(v) => onUpdate(v as ResumeId)}
-    >
-      <SelectTrigger className="h-7 w-auto min-w-0 cursor-pointer border-none bg-transparent p-0 text-sm shadow-none focus:ring-0 [&>svg]:hidden">
-        <SelectValue placeholder={
-          <span className={`truncate ${nameClass}`}>{job.resumeName || "—"}</span>
-        }>
-          <span className="truncate">{job.resumeName || "—"}</span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {resumes.map((r) => (
-          <SelectItem key={r._id} value={r._id}>
-            {r.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}

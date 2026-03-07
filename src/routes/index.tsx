@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -17,7 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Redirect } from "@/components/redirect";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +41,7 @@ function DashboardPage() {
         <DashboardSkeleton />
       </AuthLoading>
       <Unauthenticated>
-        <RedirectToLogin />
+        <Redirect to="/login" />
       </Unauthenticated>
       <Authenticated>
         <Dashboard />
@@ -175,10 +176,3 @@ function TableSkeleton() {
   );
 }
 
-function RedirectToLogin() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    void navigate({ to: "/login" });
-  }, [navigate]);
-  return null;
-}

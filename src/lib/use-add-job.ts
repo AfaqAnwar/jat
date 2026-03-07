@@ -56,18 +56,20 @@ export function useAddJob() {
         return false;
       }
 
+      const resolvedLocation = resolveLocation(result.locations, prefs?.state ?? undefined);
+
       await addJob({
         url: normalized,
         role: result.role || "Untitled Role",
-        sector: result.sector || undefined,
+        sector: result.sector === "" ? undefined : result.sector,
         company: result.company || "Unknown Company",
-        salary: result.salary || undefined,
-        location: resolveLocation(result.locations, prefs?.state ?? undefined) || undefined,
+        salary: result.salary === "" ? undefined : result.salary,
+        location: resolvedLocation === "" ? undefined : resolvedLocation,
         locationType: result.locationType !== "onsite" ? result.locationType : undefined,
         dateApplied: todayISO(),
-        datePosted: result.datePosted || undefined,
+        datePosted: result.datePosted === "" ? undefined : result.datePosted,
         status: "applied",
-        resumeId: (activeResumeId as Id<"resumes">) || undefined,
+        resumeId: activeResumeId ? (activeResumeId as Id<"resumes">) : undefined,
       });
 
       setUrl("");
@@ -82,7 +84,8 @@ export function useAddJob() {
         toast.success(`Added ${result.role} at ${result.company}`);
       }
       return true;
-    } catch {
+    } catch (err) {
+      console.error("Failed to parse job:", err);
       setManualEntry({ url: normalized, reason: "Something went wrong while parsing." });
       return false;
     } finally {
@@ -97,15 +100,15 @@ export function useAddJob() {
       await addJob({
         url: manualEntry.url,
         role: fields.role,
-        sector: fields.sector || undefined,
+        sector: fields.sector === "" ? undefined : fields.sector,
         company: fields.company,
-        salary: fields.salary || undefined,
-        location: fields.location || undefined,
+        salary: fields.salary === "" ? undefined : fields.salary,
+        location: fields.location === "" ? undefined : fields.location,
         locationType: fields.locationType !== "onsite" ? fields.locationType : undefined,
         dateApplied: fields.dateApplied,
-        datePosted: fields.datePosted || undefined,
+        datePosted: fields.datePosted === "" ? undefined : fields.datePosted,
         status: fields.status,
-        resumeId: fields.resumeId || undefined,
+        resumeId: fields.resumeId ?? undefined,
       });
 
       setUrl("");
@@ -114,7 +117,8 @@ export function useAddJob() {
       toast.dismiss();
       toast.success(`Added ${fields.role} at ${fields.company}`);
       return true;
-    } catch {
+    } catch (err) {
+      console.error("Failed to add job:", err);
       toast.dismiss();
       toast.error("Failed to add job");
       return false;

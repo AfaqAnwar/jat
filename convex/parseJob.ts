@@ -11,15 +11,13 @@ import {
   splitRoleAndSector,
 } from "./lib/normalize";
 
-type LocType = "onsite" | "remote" | "hybrid";
-
 type ParseResult = {
   role: string;
   sector: string;
   company: string;
   salary: string;
   locations: string[];
-  locationType: LocType;
+  locationType: "onsite" | "remote" | "hybrid";
   datePosted: string;
   error?: string;
 };
@@ -30,9 +28,30 @@ const EMPTY_RESULT: ParseResult = {
   company: "",
   salary: "",
   locations: [],
-  locationType: "onsite",
+  locationType: "onsite" as const,
   datePosted: "",
 };
+
+const BLOCKED_HOSTNAMES = /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|0\.0\.0\.0|\[::1?\])$/;
+
+function validateFetchUrl(raw: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error("Invalid URL");
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Only http/https URLs are allowed");
+  }
+
+  if (BLOCKED_HOSTNAMES.test(parsed.hostname)) {
+    throw new Error("URL points to a blocked address");
+  }
+
+  return parsed.href;
+}
 
 const PROMPT_TEMPLATE = `Extract job details from the PRIMARY posting in this text. Ignore sidebars and other listings.
 
@@ -75,7 +94,14 @@ export const fromUrl = action({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    const page = await fetchPageText(url);
+    let safeUrl: string;
+    try {
+      safeUrl = validateFetchUrl(url);
+    } catch {
+      return { ...EMPTY_RESULT, error: "fetch" };
+    }
+
+    const page = await fetchPageText(safeUrl);
     if ("error" in page) return { ...EMPTY_RESULT, error: page.error };
 
     const aiResult = await callGemini(page.text);
@@ -175,7 +201,6 @@ async function callGemini(text: string): Promise<Record<string, unknown> | null>
 }
 
 function normalizeAiResult(parsed: Record<string, unknown>) {
-  console.log("[parseJob] Raw AI response:", JSON.stringify(parsed));
 
   const rawDate = String(parsed.datePosted ?? "");
   const datePosted = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
@@ -191,7 +216,7 @@ function normalizeAiResult(parsed: Record<string, unknown>) {
     .filter(Boolean);
 
   const rawModel = String(parsed.workModel ?? "").toLowerCase();
-  let locationType: LocType = "onsite";
+  let locationType: ParseResult["locationType"] = "onsite";
   if (rawModel === "remote") locationType = "remote";
   else if (rawModel === "hybrid") locationType = "hybrid";
 
@@ -214,6 +239,5 @@ function normalizeAiResult(parsed: Record<string, unknown>) {
     datePosted,
   };
 
-  console.log("[parseJob] Normalized result:", JSON.stringify(result));
   return result;
 }

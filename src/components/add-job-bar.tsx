@@ -6,10 +6,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Id } from "../../convex/_generated/dataModel";
-import { GearSixIcon, CheckIcon } from "@phosphor-icons/react";
+import { GearSixIcon } from "@phosphor-icons/react";
 import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
+import { ResumePickerList } from "@/components/resume-picker-list";
 
 export function AddJobBar({ addJob }: { addJob: AddJobState }) {
   const [gearOpen, setGearOpen] = useState(false);
@@ -27,11 +27,6 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
     if (e.key === "Enter" && !loading) {
       void submit();
     }
-  };
-
-  const handleSelectResume = (id: Id<"resumes"> | "") => {
-    selectResume(id);
-    setGearOpen(false);
   };
 
   return (
@@ -57,30 +52,15 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-56 rounded-none p-2">
-              <p className="px-2 pb-1 text-xs text-muted-foreground">
-                Resume for this submission
-              </p>
-              <button
-                onClick={() => handleSelectResume("")}
-                className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent"
-              >
-                <span className="w-4 shrink-0">
-                  {!resumeOverride && <CheckIcon size={14} weight="light" />}
-                </span>
-                Default{defaultResumeName ? ` (${defaultResumeName})` : ""}
-              </button>
-              {resumes?.map((r) => (
-                <button
-                  key={r._id}
-                  onClick={() => handleSelectResume(r._id)}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent"
-                >
-                  <span className="w-4 shrink-0">
-                    {resumeOverride === r._id && <CheckIcon size={14} weight="light" />}
-                  </span>
-                  {r.name}
-                </button>
-              ))}
+              <ResumePickerList
+                resumes={resumes ?? []}
+                resumeOverride={resumeOverride}
+                defaultResumeName={defaultResumeName}
+                onSelect={(id) => {
+                  selectResume(id);
+                  setGearOpen(false);
+                }}
+              />
             </PopoverContent>
           </Popover>
         )}

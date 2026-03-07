@@ -1,7 +1,7 @@
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 export type Status = Doc<"jobs">["status"];
-export type LocType = "onsite" | "remote" | "hybrid";
+export type LocType = NonNullable<Doc<"jobs">["locationType"]>;
 export type Job = Omit<Doc<"jobs">, "resumeName"> & { resumeName: string | null };
 export type Resume = Doc<"resumes">;
 
@@ -13,7 +13,11 @@ export const STATUSES = [
   "ghosted",
 ] as const satisfies readonly Status[];
 
-export const LOC_TYPES = ["onsite", "remote", "hybrid"] as const;
+export const LOC_TYPES = [
+  "onsite",
+  "remote",
+  "hybrid",
+] as const satisfies readonly LocType[];
 
 export function cycleLocationType(current?: string | null): LocType {
   const idx = LOC_TYPES.indexOf((current ?? "onsite") as LocType);
@@ -22,6 +26,18 @@ export function cycleLocationType(current?: string | null): LocType {
 
 export type ResumeId = Id<"resumes">;
 export type JobId = Id<"jobs">;
+
+export type EditableJobField =
+  | "role"
+  | "company"
+  | "salary"
+  | "location"
+  | "locationType"
+  | "dateApplied"
+  | "datePosted"
+  | "sector"
+  | "status"
+  | "resumeId";
 
 export type ManualEntry = {
   url: string;

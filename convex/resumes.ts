@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAuth, requireOwnership } from "./lib/auth";
+import { starResume } from "./lib/resume-defaults";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuth(ctx).catch(() => null);
     if (!userId) return [];
     return ctx.db
       .query("resumes")
@@ -17,10 +18,9 @@ export const list = query({
 export const getUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuth(ctx).catch(() => null);
     if (!userId) return null;
 
-    // Verify the storage ID belongs to one of the user's resumes
     const resume = await ctx.db
       .query("resumes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -35,8 +35,7 @@ export const getUrl = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAuth(ctx);
     return ctx.storage.generateUploadUrl();
   },
 });
@@ -47,8 +46,7 @@ export const save = mutation({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, { name, storageId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const existing = await ctx.db
       .query("resumes")
@@ -72,10 +70,8 @@ export const rename = mutation({
     name: v.string(),
   },
   handler: async (ctx, { id, name }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    const resume = await ctx.db.get(id);
-    if (!resume || resume.userId !== userId) throw new Error("Not found");
+    const userId = await requireAuth(ctx);
+    await requireOwnership(ctx, "resumes", id, userId);
     await ctx.db.patch(id, { name });
   },
 });
@@ -83,43 +79,18 @@ export const rename = mutation({
 export const setDefault = mutation({
   args: { id: v.id("resumes") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    const resume = await ctx.db.get(id);
-    if (!resume || resume.userId !== userId) throw new Error("Not found");
-
-    const all = await ctx.db
-      .query("resumes")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-
-    for (const r of all) {
-      if (r._id === id) {
-        await ctx.db.patch(r._id, { isDefault: true });
-      } else if (r.isDefault) {
-        await ctx.db.patch(r._id, { isDefault: undefined });
-      }
-    }
-
-    const prefs = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    if (prefs?.alwaysUseLatestResume) {
-      await ctx.db.patch(prefs._id, { alwaysUseLatestResume: undefined });
-    }
+    const userId = await requireAuth(ctx);
+    await requireOwnership(ctx, "resumes", id, userId);
+    await starResume(ctx, userId, id);
   },
 });
 
 export const remove = mutation({
   args: { id: v.id("resumes") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    const resume = await ctx.db.get(id);
-    if (!resume || resume.userId !== userId) throw new Error("Not found");
+    const userId = await requireAuth(ctx);
+    const resume = await requireOwnership(ctx, "resumes", id, userId);
 
-    // Clear resumeId from jobs that used this resume (resumeName is retained)
     const jobs = await ctx.db
       .query("jobs")
       .withIndex("by_user", (q) => q.eq("userId", userId))

@@ -65,7 +65,8 @@ export function ResumeManager({
       if (hasExistingResumes && !isAlwaysLatest) {
         setPendingResumeId(id);
       }
-    } catch {
+    } catch (err) {
+      console.error("Failed to upload resume:", err);
       toast.dismiss();
       toast.error("Failed to upload resume");
     } finally {
@@ -250,6 +251,7 @@ export function ResumeManager({
                             onClick={() => void handleSetDefault(r._id)}
                             className="cursor-pointer shrink-0 p-0.5"
                             title={r.isDefault ? "Default resume" : "Set as default"}
+                            aria-label={r.isDefault ? "Default resume" : "Set as default"}
                           >
                             <StarIcon
                               size={14}

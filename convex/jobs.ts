@@ -1,13 +1,13 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 import { locationTypeValidator, statusValidator } from "./lib/validators";
+import { requireAuth, requireOwnership } from "./lib/auth";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuth(ctx).catch(() => null);
     if (!userId) return [];
     const jobs = await ctx.db
       .query("jobs")
@@ -50,20 +50,42 @@ export const add = mutation({
     resumeId: v.optional(v.id("resumes")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
+
+    if (args.resumeId) {
+      await requireOwnership(ctx, "resumes", args.resumeId, userId);
+    }
 
     return ctx.db.insert("jobs", {
       ...args,
-      sector: args.sector || undefined,
-      salary: args.salary || undefined,
-      location: args.location || undefined,
-      locationType: args.locationType || undefined,
-      datePosted: args.datePosted || undefined,
+      sector: args.sector === "" ? undefined : args.sector,
+      salary: args.salary === "" ? undefined : args.salary,
+      location: args.location === "" ? undefined : args.location,
+      locationType: args.locationType ?? undefined,
+      datePosted: args.datePosted === "" ? undefined : args.datePosted,
       userId,
     });
   },
 });
+
+type UpdatableJobFields = {
+  role?: string;
+  sector?: string;
+  company?: string;
+  salary?: string;
+  location?: string;
+  locationType?: "onsite" | "remote" | "hybrid";
+  dateApplied?: string;
+  datePosted?: string;
+  status?: "applied" | "interviewing" | "offer" | "rejected" | "ghosted";
+  resumeId?: Id<"resumes">;
+};
+
+function pickDefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  ) as Partial<T>;
+}
 
 export const update = mutation({
   args: {
@@ -80,14 +102,10 @@ export const update = mutation({
     resumeId: v.optional(v.id("resumes")),
   },
   handler: async (ctx, { id, ...fields }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    const job = await ctx.db.get(id);
-    if (!job || job.userId !== userId) throw new Error("Not found");
+    const userId = await requireAuth(ctx);
+    await requireOwnership(ctx, "jobs", id, userId);
 
-    const updates: Record<string, unknown> = Object.fromEntries(
-      Object.entries(fields).filter(([, val]) => val !== undefined),
-    );
+    const updates = pickDefined<UpdatableJobFields>(fields);
 
     if (Object.keys(updates).length > 0) {
       await ctx.db.patch(id, updates);
@@ -98,10 +116,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("jobs") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    const job = await ctx.db.get(id);
-    if (!job || job.userId !== userId) throw new Error("Not found");
+    const userId = await requireAuth(ctx);
+    await requireOwnership(ctx, "jobs", id, userId);
     await ctx.db.delete(id);
   },
 });
