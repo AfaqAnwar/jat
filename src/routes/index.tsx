@@ -64,7 +64,7 @@ function Dashboard() {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:flex sm:h-screen sm:flex-col sm:overflow-hidden">
       <header className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src="/JAJT.png" alt="JAT" className="h-8 w-8 sm:h-9 sm:w-9" />
+          <img src={`${import.meta.env.BASE_URL}JAJT.png`} alt="JAT" className="h-8 w-8 sm:h-9 sm:w-9" />
           <h1 className="text-xl font-bold sm:text-2xl">Just Another Job Tracker</h1>
         </div>
         <DropdownMenu>

@@ -12,7 +12,7 @@ if (!convexUrl || typeof convexUrl !== "string") {
 }
 const convex = new ConvexReactClient(convexUrl);
 
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL });
 
 declare module "@tanstack/react-router" {
   interface Register {

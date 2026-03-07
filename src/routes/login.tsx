@@ -34,7 +34,7 @@ function LoginView() {
   const handleSignIn = async (provider: Provider) => {
     setSigningInWith(provider);
     try {
-      await signIn(provider);
+      await signIn(provider, { redirectTo: window.location.origin + import.meta.env.BASE_URL });
     } catch (err) {
       console.error("Sign-in failed:", err);
       setSigningInWith(null);
@@ -43,7 +43,7 @@ function LoginView() {
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <img src="/JAJT.png" alt="JAT" className="h-24 w-24" />
+      <img src={`${import.meta.env.BASE_URL}JAJT.png`} alt="JAT" className="h-24 w-24" />
       <div className="flex flex-col gap-2">
         <OAuthButton
           provider="github"
