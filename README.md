@@ -6,12 +6,6 @@
   <a href="https://justanotherjobtracker.com"><strong>justanotherjobtracker.com</strong></a>
 </div>
 
----
-
-**[Overview](#overview)** | **[Contributing](CONTRIBUTING.md)**
-
----
-
 ## Overview
 
 I built JAT in my spare time because I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. I wanted something where I could just paste a URL and have the rest filled in for me.
