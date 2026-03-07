@@ -2,27 +2,34 @@
   <img src="public/JAJT.png" alt="JAT" width="80" />
   <h1>Just Another Job Tracker</h1>
   <p>A frictionless job application tracker. Paste a URL, get a parsed entry. That's it.</p>
+  <br />
+  <a href="https://justanotherjobtracker.com"><strong>justanotherjobtracker.com</strong></a>
 </div>
 
 ---
 
-<!-- Tab-style navigation -->
-**[Overview](#overview)** | **[Contributing](#contributing)**
+**[Overview](#overview)** | **[Contributing](CONTRIBUTING.md)**
 
 ---
 
 ## Overview
 
-JAT is a personal job application tracker designed to get out of your way. Paste the URL of a job posting and the app automatically extracts the role, company, salary, location, and more using AI. Everything stays in a single, editable table you can sort and manage at a glance.
+I built JAT in my spare time because I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. I wanted something where I could just paste a URL and have the rest filled in for me.
+
+The whole thing runs on free tiers. The frontend is hosted on GitHub Pages, the backend on Convex's free plan, and AI parsing uses Google Gemini's free API. If you'd rather run your own instance, it's straightforward to self-host. Everything is open source and the setup takes a few minutes.
+
+It's fully mobile-friendly too. Try it on your phone. The entire UI adapts with cards instead of a table, bottom-sheet editors, a sticky add button, and swipe-friendly drawers.
+
+Paste the URL of a job posting and JAT automatically extracts the role, company, salary, location, and more. Everything stays in a single, editable table you can sort and manage at a glance.
 
 ### Features
 
-- **One-paste add** -- paste a job URL and JAT parses it into a structured entry via Google Gemini. Greenhouse and Lever postings are parsed from their APIs for higher accuracy.
-- **Inline editing** -- click any cell in the table to edit it. Role, company, salary, location, dates, and status are all editable in place.
-- **Resume management** -- upload, rename, star a default, and attach resumes to individual applications. Supports "always use latest" mode.
-- **Location preference** -- set your US state and JAT automatically picks the closest matching location from multi-location postings.
-- **Mobile-friendly** -- responsive card layout on mobile with a detail sheet for editing, sticky add-job button.
-- **Real-time sync** -- powered by Convex, so changes appear instantly across tabs and devices.
+- **One-paste add.** Paste a job URL and JAT parses it into a structured entry via Google Gemini. Greenhouse and Lever postings are parsed from their APIs for higher accuracy.
+- **Inline editing.** Click any cell in the table to edit it. Role, company, salary, location, dates, and status are all editable in place.
+- **Resume management.** Upload, rename, star a default, and attach resumes to individual applications. Supports "always use latest" mode.
+- **Location preference.** Set your US state and JAT automatically picks the closest matching location from multi-location postings.
+- **Mobile-friendly.** Responsive card layout on mobile with a detail sheet for editing and a sticky add-job button.
+- **Real-time sync.** Powered by Convex, so changes appear instantly across tabs and devices.
 
 ### Tech Stack
 
@@ -41,7 +48,7 @@ JAT is designed to be self-hosted. You need a free [Convex](https://convex.dev) 
 #### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/jat.git
+git clone https://github.com/AfaqAnwar/jat.git
 cd jat
 bun install        # or npm install
 ```
@@ -60,24 +67,24 @@ In the **Convex dashboard** (Settings > Environment Variables), set:
 
 | Variable | Description |
 |----------|-------------|
-| `CONVEX_SITE_URL` | Your Convex site URL (e.g. `https://your-slug.convex.site`) |
+| `SITE_URL` | Your Convex HTTP Actions URL (e.g. `https://your-slug.convex.site`) |
 | `AUTH_GITHUB_ID` | GitHub OAuth App client ID |
 | `AUTH_GITHUB_SECRET` | GitHub OAuth App client secret |
 | `AUTH_GOOGLE_ID` | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
 | `GEMINI_API_KEY` | Google Gemini API key (optional, needed for AI parsing) |
 
-For GitHub OAuth, register an app at [github.com/settings/developers](https://github.com/settings/developers). Set the callback URL to your `CONVEX_SITE_URL` + `/api/auth/callback/github`.
+For GitHub OAuth, register an app at [github.com/settings/developers](https://github.com/settings/developers). Set the callback URL to your Convex HTTP Actions URL + `/api/auth/callback/github`.
 
-For Google OAuth, create credentials at [console.cloud.google.com](https://console.cloud.google.com/apis/credentials). Set the redirect URI to your `CONVEX_SITE_URL` + `/api/auth/callback/google`.
+For Google OAuth, create credentials at [console.cloud.google.com](https://console.cloud.google.com/apis/credentials). Set the redirect URI to your Convex HTTP Actions URL + `/api/auth/callback/google`.
 
 #### 4. Run locally
 
 ```bash
-# Terminal 1 — Convex backend
+# Terminal 1
 npx convex dev
 
-# Terminal 2 — Vite frontend
+# Terminal 2
 bun dev            # or npm run dev
 ```
 
@@ -90,7 +97,8 @@ Open [http://localhost:5173](http://localhost:5173).
 1. Push to GitHub.
 2. Go to Settings > Pages > Source and select **GitHub Actions**.
 3. Add `VITE_CONVEX_URL` as a repository variable (Settings > Secrets and variables > Actions > Variables).
-4. The included workflow at `.github/workflows/deploy.yml` builds and deploys on every push to `main`.
+4. Add `CONVEX_DEPLOY_KEY` as a repository secret (generate one in the Convex dashboard under Settings > Deploy Keys).
+5. The included workflow at `.github/workflows/deploy.yml` builds and deploys on every push to `main`.
 
 **Other hosts (Vercel, Netlify, Cloudflare Pages):**
 
@@ -102,77 +110,35 @@ Set `VITE_CONVEX_URL` as an environment variable and use `bun run build` as the 
 npx convex deploy
 ```
 
----
+### Deployment Notes
 
-## Contributing
+A few things to be aware of if you're hosting this yourself, especially outside of GitHub Pages.
 
-Contributions are welcome. Whether it's a bug fix, feature, or documentation improvement, feel free to open a PR.
+#### SPA routing and 404 fallback
 
-### Prerequisites
+GitHub Pages doesn't natively support client-side routing. Navigating directly to `/login` returns a 404. The Vite config includes a `spaFallbackPlugin` that copies `index.html` to `404.html` at build time. GitHub Pages serves `404.html` for unknown paths, which lets TanStack Router handle routing on the client.
 
-- [Bun](https://bun.sh) (or Node.js 20+)
-- A free [Convex](https://convex.dev) account
-- Git
+If you deploy to Vercel, Netlify, or Cloudflare Pages, you don't need this workaround. Those platforms support SPA rewrites natively (e.g. a `_redirects` file or `vercel.json` rewrite rule). The `404.html` copy won't cause issues but you can remove the plugin if you want.
 
-### Getting started
+#### Base path
 
-1. **Fork** the repository and clone your fork.
-2. Follow the [Self-Hosting](#self-hosting) steps above to get a working local setup.
-3. Create a feature branch: `git checkout -b feat/my-feature`
+The Vite config reads `VITE_BASE_PATH` to set the app's base URL. When hosting on a custom domain or any platform that serves from root, this should be `/`. If you're hosting under a subpath (e.g. `username.github.io/jat/`), set `VITE_BASE_PATH` to `/jat/`.
 
-### Project structure
+This affects asset URLs, the router base, and the OAuth `redirectTo` parameter. The login page constructs its redirect using `window.location.origin + import.meta.env.BASE_URL`, so getting this value right is important for auth to work.
 
-```
-jat/
-├── convex/                 # Backend (Convex serverless functions)
-│   ├── schema.ts           # Database schema (jobs, resumes, userPreferences)
-│   ├── jobs.ts             # Jobs CRUD mutations & queries
-│   ├── resumes.ts          # Resume upload, rename, delete, star
-│   ├── preferences.ts      # User preferences (location, resume behavior)
-│   ├── parseJob.ts         # AI job parsing action (Gemini + Greenhouse/Lever APIs)
-│   ├── auth.ts             # OAuth provider configuration
-│   └── lib/                # Shared helpers (auth, validation, normalization)
-├── src/
-│   ├── routes/             # TanStack Router file-based routes
-│   │   ├── index.tsx       # Dashboard (main page)
-│   │   └── login.tsx       # Login page
-│   ├── components/         # React components
-│   │   ├── job-table.tsx   # Main jobs table (desktop + mobile)
-│   │   ├── add-job-bar.tsx # URL input bar
-│   │   ├── resume-manager.tsx
-│   │   └── ui/             # shadcn/ui primitives
-│   └── lib/                # Frontend utilities (types, hooks, formatters)
-├── .github/workflows/      # CI/CD (GitHub Pages deploy)
-└── vite.config.ts          # Vite + React Compiler + Tailwind + CSP
-```
+#### OAuth redirect origins
 
-### Code style
+After OAuth, Convex redirects the user back to your frontend. The allowed origins are listed in `convex/auth.ts` under `ALLOWED_REDIRECT_ORIGINS`. If you deploy to a new domain, add it to this array and redeploy your Convex functions. Otherwise login will redirect to the Convex site URL instead of your app.
 
-- TypeScript strict mode is enabled.
-- ESLint is configured -- run `bun lint` (or `npm run lint`) before committing.
-- No comments that simply narrate what the code does. Comments should explain *why*, not *what*.
-- Follow existing naming conventions: `kebab-case` for files, `camelCase` for functions/variables, `PascalCase` for components and types.
+The OAuth callback URLs configured on GitHub/Google should point to your **Convex HTTP Actions URL** (e.g. `https://your-slug.convex.site/api/auth/callback/github`), not your frontend domain. Convex handles the OAuth exchange and then redirects to your frontend.
 
-### Commit conventions
+#### Content Security Policy
 
-Write clear, imperative commit messages:
+The build injects a CSP meta tag via the `cspPlugin` in `vite.config.ts`. It restricts scripts, styles, fonts, and connections to `'self'` plus Convex domains. If you add third-party services (analytics, error tracking, CDN fonts), you'll need to update the CSP directives or requests will be blocked silently.
 
-```
-fix: validate URL scheme in jobs.add mutation
-feat: add rate limiting to parseJob action
-docs: update self-hosting instructions
-```
+#### CNAME file
 
-### Submitting a PR
-
-1. Make sure `bun lint` and `bun run build` pass locally.
-2. Keep PRs focused -- one feature or fix per PR.
-3. Include a brief description of what changed and why.
-4. If your change touches the Convex schema or adds a new mutation/query, mention it in the PR description.
-
-### Reporting issues
-
-Open an issue on GitHub. Include steps to reproduce, expected behavior, and what actually happened. Screenshots or console output are helpful.
+`public/CNAME` contains `justanotherjobtracker.com` for GitHub Pages custom domain configuration. If you fork this and deploy to your own domain, update or remove this file. If you're not using GitHub Pages, the file is harmless but unnecessary.
 
 ---
 
