@@ -13,7 +13,6 @@ const CSP = [
   "font-src 'self'",
   "img-src 'self' data:",
   "connect-src 'self' https://*.convex.cloud https://*.convex.site wss://*.convex.cloud",
-  "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'none'",
 ].join("; ");
@@ -47,6 +46,7 @@ function spaFallbackPlugin(): Plugin {
 }
 
 export default defineConfig({
+  base: process.env.VITE_BASE_PATH ?? "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
