@@ -100,7 +100,7 @@ function Dashboard() {
           <TableSkeleton />
         ) : jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24">
-            <p className="text-center text-muted-foreground">
+            <p className="text-center font-light text-muted-foreground">
               No job applications yet.
               <br />
               <span className="hidden sm:inline">Paste a URL above to get started.</span>
