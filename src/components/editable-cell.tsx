@@ -61,6 +61,14 @@ export function EditableCell({
   return (
     <span
       onClick={() => setEditing(true)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setEditing(true);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className="-mx-1 block cursor-pointer truncate px-1 py-0.5 hover:bg-muted"
     >
       {displayValue || placeholder}

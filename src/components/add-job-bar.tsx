@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/popover";
 import type { Id } from "../../convex/_generated/dataModel";
 import { GearSixIcon, CheckIcon } from "@phosphor-icons/react";
-import { useAddJob } from "@/lib/use-add-job";
+import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
 
-export function AddJobBar() {
+export function AddJobBar({ addJob }: { addJob: AddJobState }) {
   const [gearOpen, setGearOpen] = useState(false);
   const {
     url, setUrl, loading, submit,
@@ -21,7 +21,7 @@ export function AddJobBar() {
     activeResumeId,
     activeResumeName, defaultResumeName,
     hasMultipleResumes,
-  } = useAddJob();
+  } = addJob;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading) {
@@ -51,6 +51,7 @@ export function AddJobBar() {
               <button
                 className="flex cursor-pointer items-center justify-center rounded-none border px-2 text-muted-foreground hover:text-foreground"
                 title={activeResumeName ? `Resume: ${activeResumeName}` : "Select resume"}
+                aria-label={activeResumeName ? `Resume: ${activeResumeName}` : "Select resume"}
               >
                 <GearSixIcon size={16} weight="light" />
               </button>

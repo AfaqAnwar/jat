@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
 import type { ResumeId } from "@/lib/types";
 import {
   Dialog,
@@ -12,23 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ResumePreviewLink } from "@/components/resume-preview-link";
 import { toast } from "sonner";
-import { EyeIcon, TrashIcon, PencilSimpleIcon, CheckIcon, XIcon, StarIcon } from "@phosphor-icons/react";
-
-function formatFileName(name: string): string {
-  return name
-    .replace(/\.[^.]+$/, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function deduplicateName(name: string, existing: string[]): string {
-  if (!existing.includes(name)) return name;
-  let version = 2;
-  while (existing.includes(`${name} V${version}`)) version++;
-  return `${name} V${version}`;
-}
+import { TrashIcon, PencilSimpleIcon, CheckIcon, XIcon, StarIcon } from "@phosphor-icons/react";
+import { formatFileName, deduplicateName } from "@/lib/format-file";
 
 export function ResumeManager({
   open,
@@ -70,6 +56,7 @@ export function ResumeManager({
         headers: { "Content-Type": file.type },
         body: file,
       });
+      if (!result.ok) throw new Error(`Upload failed (${result.status})`);
       const { storageId } = await result.json();
       const id = await saveResume({ name, storageId });
       toast.dismiss();
@@ -273,7 +260,7 @@ export function ResumeManager({
                         )}
                         <span className="flex-1 truncate">{r.name}</span>
                         <div className="flex items-center gap-1">
-                          <ResumePreviewButton storageId={r.storageId} />
+                          <ResumePreviewLink storageId={r.storageId} />
                           <button
                             onClick={() => {
                               setEditingId(r._id);
@@ -305,18 +292,3 @@ export function ResumeManager({
   );
 }
 
-function ResumePreviewButton({ storageId }: { storageId: Id<"_storage"> }) {
-  const url = useQuery(api.resumes.getUrl, { storageId });
-  if (!url) return null;
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="cursor-pointer p-1 text-muted-foreground hover:text-foreground"
-      title="Preview"
-    >
-      <EyeIcon size={14} weight="light" />
-    </a>
-  );
-}

@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { locationTypeValidator, statusValidator } from "./lib/validators";
 
 const schema = defineSchema({
   ...authTables,
@@ -12,20 +13,10 @@ const schema = defineSchema({
     company: v.string(),
     salary: v.optional(v.string()),
     location: v.optional(v.string()),
-    locationType: v.optional(v.union(
-      v.literal("onsite"),
-      v.literal("remote"),
-      v.literal("hybrid"),
-    )),
+    locationType: v.optional(locationTypeValidator),
     dateApplied: v.string(),
     datePosted: v.optional(v.string()),
-    status: v.union(
-      v.literal("applied"),
-      v.literal("interviewing"),
-      v.literal("offer"),
-      v.literal("rejected"),
-      v.literal("ghosted"),
-    ),
+    status: statusValidator,
     resumeId: v.optional(v.id("resumes")),
     resumeName: v.optional(v.string()),
   }).index("by_user", ["userId"]),

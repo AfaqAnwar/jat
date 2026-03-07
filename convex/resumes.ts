@@ -126,7 +126,10 @@ export const remove = mutation({
       .collect();
     for (const job of jobs) {
       if (job.resumeId === id) {
-        await ctx.db.patch(job._id, { resumeId: undefined });
+        await ctx.db.patch(job._id, {
+          resumeId: undefined,
+          resumeName: resume.name,
+        });
       }
     }
 

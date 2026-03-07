@@ -15,17 +15,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LocationTypeIcon, cycleLocationType } from "@/components/location-type-icon";
-import type { LocType, Resume } from "@/lib/types";
-import type { ManualEntry, ManualJobFields } from "@/lib/use-add-job";
+import { LocationTypeIcon, LOC_TYPE_CONFIG } from "@/components/location-type-icon";
+import { cycleLocationType } from "@/lib/types";
+import type { LocType, Resume, ManualEntry, ManualJobFields } from "@/lib/types";
 import type { Id } from "../../convex/_generated/dataModel";
 import { todayISO } from "@/lib/format-date";
-
-const LOC_TYPE_LABELS: Record<LocType, string> = {
-  onsite: "On-site",
-  remote: "Remote",
-  hybrid: "Hybrid",
-};
 
 export function ManualJobModal({
   entry,
@@ -79,12 +73,19 @@ export function ManualJobModal({
           <DialogTitle>Add Job Manually</DialogTitle>
           <p className="text-xs text-muted-foreground">{entry.reason}</p>
         </DialogHeader>
-        <div className="space-y-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSubmit();
+          }}
+          className="space-y-3"
+        >
           <Field label="Role" required>
             <Input
               value={role}
               onChange={(e) => setRole(e.target.value)}
               placeholder="Software Engineer"
+              aria-required
               autoFocus
             />
           </Field>
@@ -93,6 +94,7 @@ export function ManualJobModal({
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Acme Inc."
+              aria-required
             />
           </Field>
           <Field label="Sector / Team">
@@ -115,9 +117,10 @@ export function ManualJobModal({
                 type="button"
                 onClick={() => setLocationType(cycleLocationType(locationType))}
                 className="flex w-24 shrink-0 cursor-pointer items-center justify-center gap-1 border px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                aria-label={`Work model: ${LOC_TYPE_CONFIG[locationType].title}. Click to change.`}
               >
                 <LocationTypeIcon type={locationType} />
-                <span>{LOC_TYPE_LABELS[locationType]}</span>
+                <span>{LOC_TYPE_CONFIG[locationType].title}</span>
               </button>
               <Input
                 value={location}
@@ -152,13 +155,13 @@ export function ManualJobModal({
             </Field>
           )}
           <Button
-            onClick={() => void handleSubmit()}
+            type="submit"
             disabled={!canSubmit || submitting}
             className="w-full"
           >
             {submitting ? "Adding..." : "Add"}
           </Button>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

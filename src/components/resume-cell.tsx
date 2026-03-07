@@ -1,5 +1,3 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import type { Job, Resume, ResumeId } from "@/lib/types";
 import {
   Select,
@@ -8,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EyeIcon } from "@phosphor-icons/react";
+import { ResumePreviewLink } from "@/components/resume-preview-link";
 
 export function ResumeCell({
   job,
@@ -49,9 +47,7 @@ export function ResumeCell({
             ))}
           </SelectContent>
         </Select>
-        {job.resumeId && (
-          <ResumeViewIcon resumeId={job.resumeId} resumes={resumes} />
-        )}
+        <ResumeEyeIcon resumeId={job.resumeId} resumes={resumes} />
       </div>
     );
   }
@@ -59,35 +55,25 @@ export function ResumeCell({
   return (
     <div className="group/resume flex min-w-0 items-center gap-1">
       <span className={`truncate text-sm ${nameClass}`}>{job.resumeName || "—"}</span>
-      {job.resumeId && (
-        <ResumeViewIcon resumeId={job.resumeId} resumes={resumes} />
-      )}
+      <ResumeEyeIcon resumeId={job.resumeId} resumes={resumes} />
     </div>
   );
 }
 
-function ResumeViewIcon({
+function ResumeEyeIcon({
   resumeId,
   resumes,
 }: {
-  resumeId: ResumeId;
+  resumeId?: ResumeId;
   resumes: Resume[];
 }) {
+  if (!resumeId) return null;
   const resume = resumes.find((r) => r._id === resumeId);
-  const url = useQuery(
-    api.resumes.getUrl,
-    resume ? { storageId: resume.storageId } : "skip",
-  );
-  if (!url) return null;
+  if (!resume) return null;
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <ResumePreviewLink
+      storageId={resume.storageId}
       className="inline-flex cursor-pointer p-0.5 text-muted-foreground/0 transition-colors group-hover/resume:text-muted-foreground hover:text-foreground!"
-      aria-label="View resume"
-    >
-      <EyeIcon size={14} weight="light" />
-    </a>
+    />
   );
 }

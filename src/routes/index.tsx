@@ -21,11 +21,13 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useAddJob } from "@/lib/use-add-job";
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
@@ -51,6 +53,7 @@ function Dashboard() {
   const { signOut } = useAuthActions();
   const jobs = useQuery(api.jobs.list);
   const resumes = useQuery(api.resumes.list);
+  const addJob = useAddJob();
   const [resumesOpen, setResumesOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
@@ -65,7 +68,10 @@ function Dashboard() {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="cursor-pointer rounded-none p-1 text-muted-foreground hover:text-foreground focus:outline-none">
+            <button
+              className="cursor-pointer rounded-none p-1 text-muted-foreground hover:text-foreground focus:outline-none"
+              aria-label="User menu"
+            >
               <UserIcon size={24} weight="light" />
             </button>
           </DropdownMenuTrigger>
@@ -85,7 +91,7 @@ function Dashboard() {
       </header>
 
       <div className="mb-6">
-        <AddJobBar />
+        <AddJobBar addJob={addJob} />
       </div>
 
       {jobs === undefined ? (
@@ -110,11 +116,11 @@ function Dashboard() {
         <DialogContent className="rounded-none sm:max-w-xs">
           <DialogHeader>
             <DialogTitle>Sign out?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to sign out?
+            </DialogDescription>
           </DialogHeader>
           <Separator />
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to sign out?
-          </p>
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setSignOutOpen(false)}>
               Cancel
@@ -126,7 +132,7 @@ function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      <MobileAddButton />
+      <MobileAddButton addJob={addJob} />
     </div>
 
     <footer className="fixed bottom-2 right-4 z-40 hidden sm:block">

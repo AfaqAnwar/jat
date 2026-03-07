@@ -1,11 +1,11 @@
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 type Resume = Doc<"resumes">;
 
 export function getDefaultResumeId(
   resumes: Resume[] | undefined,
   alwaysUseLatest?: boolean,
-): string | undefined {
+): Id<"resumes"> | undefined {
   if (!resumes || resumes.length === 0) return undefined;
   if (resumes.length === 1) return resumes[0]._id;
 

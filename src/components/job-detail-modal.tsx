@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Job, Resume, JobId, ResumeId, Status } from "@/lib/types";
+import type { Job, Resume, JobId, ResumeId } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { EditableCell } from "@/components/editable-cell";
 import { StatusSelect } from "@/components/status-select";
-import { LocationTypeIcon, cycleLocationType } from "@/components/location-type-icon";
+import { LocationTypeIcon } from "@/components/location-type-icon";
+import { cycleLocationType } from "@/lib/types";
 import { TrashIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
 
 export function JobDetailModal({
@@ -33,8 +32,6 @@ export function JobDetailModal({
   onUpdate: (id: JobId, field: string, value: string) => void;
   onDelete: (id: JobId) => Promise<void>;
 }) {
-  const updateJob = useMutation(api.jobs.update);
-
   if (!job) return null;
 
   return (
@@ -80,10 +77,7 @@ export function JobDetailModal({
               <LocationTypeIcon
                 type={job.locationType}
                 onCycle={() =>
-                  void updateJob({
-                    id: job._id,
-                    locationType: cycleLocationType(job.locationType),
-                  })
+                  onUpdate(job._id, "locationType", cycleLocationType(job.locationType))
                 }
               />
               <div className="min-w-0 flex-1">
@@ -113,9 +107,7 @@ export function JobDetailModal({
           <DetailRow label="Status">
             <StatusSelect
               value={job.status}
-              onValueChange={(s) =>
-                void updateJob({ id: job._id, status: s as Status })
-              }
+              onValueChange={(s) => onUpdate(job._id, "status", s)}
             />
           </DetailRow>
           <DetailRow label="Resume">
@@ -123,14 +115,14 @@ export function JobDetailModal({
               job={job}
               resumes={resumes}
               onUpdate={(resumeId) =>
-                void updateJob({ id: job._id, resumeId })
+                onUpdate(job._id, "resumeId", resumeId)
               }
             />
           </DetailRow>
           <div className="flex justify-end pt-2">
             <button
-              onClick={() => {
-                void onDelete(job._id);
+              onClick={async () => {
+                await onDelete(job._id);
                 onClose();
               }}
               className="cursor-pointer p-1 text-muted-foreground hover:text-destructive"

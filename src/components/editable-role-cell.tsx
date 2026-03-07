@@ -99,6 +99,12 @@ export function EditableRoleCell({
         e.stopPropagation();
         startEditing();
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          startEditing();
+        }
+      }}
       role="button"
       tabIndex={0}
       className="-mx-1 block cursor-pointer truncate px-1 py-0.5 hover:bg-muted"

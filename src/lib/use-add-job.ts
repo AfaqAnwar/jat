@@ -2,30 +2,14 @@ import { useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import type { LocType, Status } from "@/lib/types";
+import type { ManualEntry, ManualJobFields } from "@/lib/types";
 import { toast } from "sonner";
 import { normalizeUrl } from "@/lib/normalize-url";
-import { getDefaultResumeId } from "@/lib/use-default-resume";
+import { getDefaultResumeId } from "@/lib/get-default-resume";
 import { resolveLocation } from "@/lib/resolve-location";
 import { todayISO } from "@/lib/format-date";
 
-export type ManualEntry = {
-  url: string;
-  reason: string;
-};
-
-export type ManualJobFields = {
-  role: string;
-  company: string;
-  sector?: string;
-  salary?: string;
-  location?: string;
-  locationType?: LocType;
-  dateApplied: string;
-  datePosted?: string;
-  status: Status;
-  resumeId?: Id<"resumes">;
-};
+export type AddJobState = ReturnType<typeof useAddJob>;
 
 export function useAddJob() {
   const [url, setUrl] = useState("");
@@ -67,7 +51,7 @@ export function useAddJob() {
       const hasCompany = !!result.company;
 
       if (!hasRole && !hasCompany) {
-        const error = "error" in result ? (result.error as string) : undefined;
+        const error = "error" in result ? String(result.error) : undefined;
         setManualEntry({ url: normalized, reason: errorMessage(error) });
         return false;
       }

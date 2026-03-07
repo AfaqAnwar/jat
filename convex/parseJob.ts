@@ -1,5 +1,6 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import {
   normalizeLocation,
   cleanLocationName,
@@ -70,7 +71,10 @@ Text:
 
 export const fromUrl = action({
   args: { url: v.string() },
-  handler: async (_ctx, { url }) => {
+  handler: async (ctx, { url }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
     const page = await fetchPageText(url);
     if ("error" in page) return { ...EMPTY_RESULT, error: page.error };
 
@@ -85,10 +89,13 @@ type FetchResult = { text: string } | { error: string };
 
 async function fetchPageText(url: string): Promise<FetchResult> {
   const isSpaHash = url.includes("#/") || url.includes("#!/");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
 
   let response: Response;
   try {
     response = await fetch(url, {
+      signal: controller.signal,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; JobTracker/1.0; +https://github.com)",
@@ -96,6 +103,8 @@ async function fetchPageText(url: string): Promise<FetchResult> {
     });
   } catch {
     return { error: "fetch" };
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!response.ok) return { error: "fetch" };
@@ -121,7 +130,10 @@ async function fetchPageText(url: string): Promise<FetchResult> {
 
 async function callGemini(text: string): Promise<Record<string, unknown> | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY is not configured");
+    return null;
+  }
 
   let response: Response;
   try {
@@ -135,25 +147,36 @@ async function callGemini(text: string): Promise<Record<string, unknown> | null>
         }),
       },
     );
-  } catch {
+  } catch (err) {
+    console.error("Gemini API request failed:", err);
     return null;
   }
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.error(`Gemini API error ${response.status}: ${body.slice(0, 200)}`);
+    return null;
+  }
 
   const data = await response.json();
   const resultText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
 
   try {
+    return JSON.parse(resultText);
+  } catch {
     const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
-    return JSON.parse(jsonMatch[0]);
-  } catch {
-    return null;
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch {
+      return null;
+    }
   }
 }
 
 function normalizeAiResult(parsed: Record<string, unknown>) {
+  console.log("[parseJob] Raw AI response:", JSON.stringify(parsed));
+
   const rawDate = String(parsed.datePosted ?? "");
   const datePosted = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
     ? rawDate
@@ -181,7 +204,7 @@ function normalizeAiResult(parsed: Record<string, unknown>) {
     String(parsed.sector ?? ""),
   );
 
-  return {
+  const result = {
     role,
     sector,
     company: String(parsed.company ?? ""),
@@ -190,4 +213,7 @@ function normalizeAiResult(parsed: Record<string, unknown>) {
     locationType,
     datePosted,
   };
+
+  console.log("[parseJob] Normalized result:", JSON.stringify(result));
+  return result;
 }

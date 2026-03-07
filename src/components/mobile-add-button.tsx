@@ -7,19 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { Id } from "../../convex/_generated/dataModel";
 import { PlusIcon } from "@phosphor-icons/react";
-import { useAddJob } from "@/lib/use-add-job";
+import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
 
-export function MobileAddButton() {
+export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
   const [open, setOpen] = useState(false);
   const {
     url, setUrl, loading, submit,
@@ -29,7 +21,7 @@ export function MobileAddButton() {
     activeResumeId,
     defaultResumeId,
     hasMultipleResumes,
-  } = useAddJob();
+  } = addJob;
 
   const handleSubmit = async () => {
     const success = await submit();
@@ -67,27 +59,29 @@ export function MobileAddButton() {
               disabled={loading}
               autoFocus
             />
-            {hasMultipleResumes && (
-              <Select
-                value={resumeOverride || "__default__"}
-                onValueChange={(v) =>
-                  selectResume(v === "__default__" ? "" : (v as Id<"resumes">))
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__default__">
-                    Default ({resumes?.find((r) => r._id === defaultResumeId)?.name ?? "latest"})
-                  </SelectItem>
-                  {resumes?.map((r) => (
-                    <SelectItem key={r._id} value={r._id}>
+            {hasMultipleResumes && resumes && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Resume</p>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => selectResume("")}
+                    className={`flex w-full items-center gap-2 rounded-none border px-3 py-2 text-left text-sm ${!resumeOverride ? "border-foreground" : "border-border"}`}
+                  >
+                    Default ({resumes.find((r) => r._id === defaultResumeId)?.name ?? "latest"})
+                  </button>
+                  {resumes.map((r) => (
+                    <button
+                      key={r._id}
+                      type="button"
+                      onClick={() => selectResume(r._id)}
+                      className={`flex w-full items-center gap-2 rounded-none border px-3 py-2 text-left text-sm ${resumeOverride === r._id ? "border-foreground" : "border-border"}`}
+                    >
                       {r.name}
-                    </SelectItem>
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </div>
             )}
             <Button
               onClick={() => void handleSubmit()}

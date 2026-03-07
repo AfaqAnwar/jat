@@ -170,7 +170,10 @@ const SECTOR_PREFIX_RE = new RegExp(
  * If the role already describes the sector (e.g. "Front End Engineer" + sector "Frontend"),
  * clear the sector to avoid redundancy.
  */
-export function splitRoleAndSector(role: string, sector: string): { role: string; sector: string } {
+export function splitRoleAndSector(rawRole: string, rawSector: string): { role: string; sector: string } {
+  let role = rawRole.trim();
+  let sector = rawSector.trim();
+
   // 1. Comma split: "Software Engineer, Payments" → role + sector
   if (!sector && role.includes(",")) {
     const commaIdx = role.indexOf(",");
@@ -230,6 +233,7 @@ function looksLikeMetadata(sector: string): boolean {
 function isSectorRedundant(role: string, sector: string): boolean {
   const r = normalizeForComparison(role);
   const s = normalizeForComparison(sector);
+  if (!s) return false;
   return r.includes(s);
 }
 
