@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { GithubLogoIcon, CircleNotchIcon } from "@phosphor-icons/react";
+import { GithubLogoIcon, GoogleLogoIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Redirect } from "@/components/redirect";
 
@@ -25,36 +25,74 @@ function LoginPage() {
   );
 }
 
+type Provider = "github" | "google";
+
 function LoginView() {
   const { signIn } = useAuthActions();
-  const [signingIn, setSigningIn] = useState(false);
+  const [signingInWith, setSigningInWith] = useState<Provider | null>(null);
 
-  const handleSignIn = async () => {
-    setSigningIn(true);
+  const handleSignIn = async (provider: Provider) => {
+    setSigningInWith(provider);
     try {
-      await signIn("github");
+      await signIn(provider);
     } catch (err) {
       console.error("Sign-in failed:", err);
-      setSigningIn(false);
+      setSigningInWith(null);
     }
   };
 
   return (
     <div className="flex flex-col items-center gap-8">
       <img src="/JAJT.png" alt="JAT" className="h-24 w-24" />
-      <button
-        onClick={() => void handleSignIn()}
-        disabled={signingIn}
-        className="flex cursor-pointer items-center gap-1.5 border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-      >
-        {signingIn ? (
-          <CircleNotchIcon size={12} weight="light" className="animate-spin" />
-        ) : (
-          <GithubLogoIcon size={12} weight="light" />
-        )}
-        {signingIn ? "Signing in..." : "GitHub Login"}
-      </button>
+      <div className="flex flex-col gap-2">
+        <OAuthButton
+          provider="github"
+          label="GitHub"
+          icon={<GithubLogoIcon size={12} weight="light" />}
+          signingInWith={signingInWith}
+          onSignIn={handleSignIn}
+        />
+        <OAuthButton
+          provider="google"
+          label="Google"
+          icon={<GoogleLogoIcon size={12} weight="light" />}
+          signingInWith={signingInWith}
+          onSignIn={handleSignIn}
+        />
+      </div>
     </div>
+  );
+}
+
+function OAuthButton({
+  provider,
+  label,
+  icon,
+  signingInWith,
+  onSignIn,
+}: {
+  provider: Provider;
+  label: string;
+  icon: React.ReactNode;
+  signingInWith: Provider | null;
+  onSignIn: (provider: Provider) => void;
+}) {
+  const isLoading = signingInWith === provider;
+  const isDisabled = signingInWith !== null;
+
+  return (
+    <button
+      onClick={() => onSignIn(provider)}
+      disabled={isDisabled}
+      className="flex w-40 cursor-pointer items-center justify-center gap-1.5 border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {isLoading ? (
+        <CircleNotchIcon size={12} weight="light" className="animate-spin" />
+      ) : (
+        icon
+      )}
+      {isLoading ? "Signing in..." : `${label} Login`}
+    </button>
   );
 }
 
