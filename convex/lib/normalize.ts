@@ -137,6 +137,17 @@ export function resolveRelativeDate(raw: string): string {
   return now.toISOString().split("T")[0];
 }
 
+/** Decode double-encoded HTML entities (e.g. from Greenhouse API responses). */
+export function decodeEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
 /** Strip HTML to plain text, removing non-content elements. */
 export function htmlToText(html: string): string {
   return html
@@ -161,6 +172,12 @@ const SECTOR_PREFIXES = [
   "back-end", "back end", "backend",
   "platform", "infrastructure", "embedded", "mobile",
   "devops", "data", "cloud", "security", "ml", "ai",
+  "ui", "ux", "ui/ux", "ux/ui",
+];
+
+const LEVEL_PREFIXES = [
+  "senior", "sr\\.?", "staff", "principal", "lead",
+  "junior", "jr\\.?", "associate", "distinguished",
 ];
 
 const SECTOR_PREFIX_RE = new RegExp(
@@ -168,29 +185,44 @@ const SECTOR_PREFIX_RE = new RegExp(
   "i",
 );
 
+const LEVEL_THEN_SECTOR_RE = new RegExp(
+  `^((?:${LEVEL_PREFIXES.join("|")})\\s+)(${SECTOR_PREFIXES.join("|")})\\s+`,
+  "i",
+);
+
 /**
- * If the role contains a comma-separated suffix and sector is empty,
- * split them (e.g. "Software Engineer, Frontend" → role: "Software Engineer", sector: "Frontend").
- *
- * If the role has a recognized prefix qualifier (e.g. "Full-Stack Software Engineer II"),
- * extract it as the sector (→ role: "Software Engineer II", sector: "Full-Stack").
- *
- * Strips parenthetical suffixes like "(JavaScript)" and appends them to sector.
- *
- * If the role already describes the sector (e.g. "Front End Engineer" + sector "Frontend"),
- * clear the sector to avoid redundancy.
+ * Normalize a role/sector pair from AI output:
+ * 1. Strip comma or dash suffixes from role (assign as sector if empty).
+ * 2. Extract parenthetical suffixes like "(JavaScript)" into sector.
+ * 3. Extract recognized prefix qualifiers (e.g. "Full-Stack", "UI") into sector.
+ * 4. Reject metadata noise (long slashes, multiple commas).
+ * 5. Clear sector if redundant with role.
  */
 export function splitRoleAndSector(rawRole: string, rawSector: string): { role: string; sector: string } {
   let role = rawRole.trim();
   let sector = rawSector.trim();
 
-  // 1. Comma split: "Software Engineer, Payments" → role + sector
-  if (!sector && role.includes(",")) {
+  // 1a. Comma split: "Software Engineer, Payments" → role + sector
+  //     Always strip the comma suffix from role; only assign sector if empty.
+  if (role.includes(",")) {
     const commaIdx = role.indexOf(",");
     const candidate = role.slice(commaIdx + 1).trim();
     if (candidate && candidate.length <= 40) {
       role = role.slice(0, commaIdx).trim();
-      sector = candidate;
+      if (!sector) sector = candidate;
+    }
+  }
+
+  // 1b. Dash split: "Software Engineer 4 - Ads Conversion API" → role + sector
+  //     Always strip the dash suffix from role; only assign sector if empty.
+  const dashMatch = role.match(/^(.+?)\s+[-–—]\s+(.+)$/);
+  if (dashMatch) {
+    const baseRole = dashMatch[1].trim();
+    const suffix = dashMatch[2].trim();
+    const isLevelSuffix = /^all\s+levels?$/i.test(suffix) || /^(i{1,3}|iv|v|[1-5])$/i.test(suffix);
+    if (baseRole.length >= 3 && suffix.length >= 2 && suffix.length <= 50 && !isLevelSuffix) {
+      role = baseRole;
+      if (!sector) sector = suffix;
     }
   }
 
@@ -202,19 +234,29 @@ export function splitRoleAndSector(rawRole: string, rawSector: string): { role: 
     sector = sector ? `${sector} (${parenContent})` : parenContent;
   }
 
-  // 3. Prefix extraction: "Full-Stack Software Engineer II" → sector "Full-Stack", role "Software Engineer II"
-  const prefixMatch = role.match(SECTOR_PREFIX_RE);
-  if (prefixMatch) {
-    const prefix = prefixMatch[1];
-    const remainder = role.slice(prefixMatch[0].length).trim();
+  // 3. Prefix extraction — try "Senior Full-Stack Software Engineer" first, then "Full-Stack Software Engineer"
+  const mergeSector = (extracted: string) => {
+    const cap = extracted.charAt(0).toUpperCase() + extracted.slice(1);
+    if (!sector) sector = cap;
+    else if (!isSectorRedundant(cap, sector) && !isSectorRedundant(sector, cap))
+      sector = `${cap} (${sector})`;
+  };
+
+  const levelSectorMatch = role.match(LEVEL_THEN_SECTOR_RE);
+  if (levelSectorMatch) {
+    const remainder = role.slice(levelSectorMatch[0].length).trim();
     if (remainder.length >= 3) {
-      const capitalizedPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-      if (!sector) {
-        sector = capitalizedPrefix;
-      } else if (!isSectorRedundant(capitalizedPrefix, sector) && !isSectorRedundant(sector, capitalizedPrefix)) {
-        sector = `${capitalizedPrefix} (${sector})`;
+      mergeSector(levelSectorMatch[2]);
+      role = `${levelSectorMatch[1].trim()} ${remainder}`;
+    }
+  } else {
+    const prefixMatch = role.match(SECTOR_PREFIX_RE);
+    if (prefixMatch) {
+      const remainder = role.slice(prefixMatch[0].length).trim();
+      if (remainder.length >= 3) {
+        mergeSector(prefixMatch[1]);
+        role = remainder;
       }
-      role = remainder;
     }
   }
 
@@ -233,7 +275,7 @@ export function splitRoleAndSector(rawRole: string, rawSector: string): { role: 
 
 /** Detect page category/tag noise that the AI incorrectly used as sector. */
 function looksLikeMetadata(sector: string): boolean {
-  if (sector.includes("/")) return true;
+  if (sector.includes("/") && sector.length > 10) return true;
   if ((sector.match(/,/g) || []).length >= 2) return true;
   if (sector.length > 50) return true;
   return false;

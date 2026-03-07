@@ -61,7 +61,7 @@ function Dashboard() {
 
   return (
     <>
-    <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:flex sm:h-screen sm:flex-col sm:overflow-hidden">
       <header className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/JAJT.png" alt="JAT" className="h-8 w-8 sm:h-9 sm:w-9" />
@@ -95,20 +95,22 @@ function Dashboard() {
         <AddJobBar addJob={addJob} />
       </div>
 
-      {jobs === undefined ? (
-        <TableSkeleton />
-      ) : jobs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-24">
-          <p className="text-center text-muted-foreground">
-            No job applications yet.
-            <br />
-            <span className="hidden sm:inline">Paste a URL above to get started.</span>
-            <span className="sm:hidden">Tap Add Job below to get started.</span>
-          </p>
-        </div>
-      ) : (
-        <JobTable jobs={jobs} resumes={resumes ?? []} />
-      )}
+      <div className="sm:min-h-0 sm:flex-1">
+        {jobs === undefined ? (
+          <TableSkeleton />
+        ) : jobs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-24">
+            <p className="text-center text-muted-foreground">
+              No job applications yet.
+              <br />
+              <span className="hidden sm:inline">Paste a URL above to get started.</span>
+              <span className="sm:hidden">Tap Add Job below to get started.</span>
+            </p>
+          </div>
+        ) : (
+          <JobTable jobs={jobs} resumes={resumes ?? []} />
+        )}
+      </div>
 
       <ResumeManager open={resumesOpen} onOpenChange={setResumesOpen} />
       <StatePicker open={stateOpen} onOpenChange={setStateOpen} />
@@ -155,13 +157,15 @@ function Dashboard() {
 
 function DashboardSkeleton() {
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:flex sm:h-screen sm:flex-col sm:overflow-hidden">
       <div className="mb-6 flex items-center justify-between">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-8 w-8 rounded-full" />
       </div>
       <Skeleton className="mb-6 h-10 w-full" />
-      <TableSkeleton />
+      <div className="sm:min-h-0 sm:flex-1">
+        <TableSkeleton />
+      </div>
     </div>
   );
 }

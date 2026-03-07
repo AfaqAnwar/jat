@@ -34,6 +34,11 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
     setOpen(false);
   };
 
+  const handleDialogChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) { setUrl(""); selectResume(""); }
+  };
+
   const defaultResumeName = resumes?.find((r) => r._id === defaultResumeId)?.name;
 
   return (
@@ -49,7 +54,7 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
         </Button>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleDialogChange}>
         <DialogContent className="rounded-none sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Job</DialogTitle>
@@ -66,6 +71,7 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
               <ResumePickerList
                 resumes={resumes}
                 resumeOverride={resumeOverride}
+                defaultResumeId={defaultResumeId}
                 defaultResumeName={defaultResumeName}
                 onSelect={selectResume}
                 variant="stacked"

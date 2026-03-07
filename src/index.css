@@ -126,6 +126,11 @@
   html {
     @apply font-sans;
     }
+  @media (min-width: 640px) {
+    html {
+      overscroll-behavior: none;
+    }
+  }
 }
 
 [data-sonner-toast][data-styled="true"] [data-title] {

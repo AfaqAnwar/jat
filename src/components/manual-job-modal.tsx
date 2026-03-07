@@ -44,6 +44,7 @@ export function ManualJobModal({
   const [resumeId, setResumeId] = useState(activeResumeId ?? "");
   const [submitting, setSubmitting] = useState(false);
 
+  const today = todayISO();
   const canSubmit = role.trim().length > 0 && company.trim().length > 0;
   const showResumePicker = (resumes?.length ?? 0) > 1;
 
@@ -57,7 +58,7 @@ export function ManualJobModal({
       salary: salary.trim() || undefined,
       location: location.trim() || undefined,
       locationType,
-      dateApplied: todayISO(),
+      dateApplied: today,
       datePosted: datePosted || undefined,
       status: "applied",
       resumeId: resumeId ? (resumeId as Id<"resumes">) : undefined,
@@ -74,6 +75,7 @@ export function ManualJobModal({
           <p className="text-xs text-muted-foreground">{entry.reason}</p>
         </DialogHeader>
         <form
+          noValidate
           onSubmit={(e) => {
             e.preventDefault();
             void handleSubmit();
@@ -134,7 +136,11 @@ export function ManualJobModal({
             <Input
               type="date"
               value={datePosted}
-              onChange={(e) => setDatePosted(e.target.value)}
+              max={today}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDatePosted(v > today ? today : v);
+              }}
               className={datePosted ? "" : "date-empty"}
             />
           </Field>

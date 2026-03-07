@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { formatDate } from "@/lib/format-date";
+import { formatDate, todayISO } from "@/lib/format-date";
 
 export function EditableCell({
   value,
@@ -14,6 +14,7 @@ export function EditableCell({
   type?: "text" | "date";
 }) {
   const isDate = type === "date";
+  const today = isDate ? todayISO() : "";
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +43,11 @@ export function EditableCell({
         ref={inputRef}
         type={type}
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        {...(isDate ? { max: today } : {})}
+        onChange={(e) => {
+          const v = e.target.value;
+          setDraft(isDate && v > today ? today : v);
+        }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();

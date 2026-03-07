@@ -19,7 +19,7 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
     resumeOverride, selectResume,
     resumes,
     activeResumeId,
-    activeResumeName, defaultResumeName,
+    activeResumeName, defaultResumeId, defaultResumeName,
     hasMultipleResumes,
   } = addJob;
 
@@ -55,6 +55,7 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
               <ResumePickerList
                 resumes={resumes ?? []}
                 resumeOverride={resumeOverride}
+                defaultResumeId={defaultResumeId}
                 defaultResumeName={defaultResumeName}
                 onSelect={(id) => {
                   selectResume(id);
