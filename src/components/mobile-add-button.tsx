@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
 import { ResumePickerList } from "@/components/resume-picker-list";
@@ -82,6 +82,7 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
               disabled={loading || !url.trim()}
               className="w-full"
             >
+              {loading && <CircleNotchIcon size={14} weight="light" className="mr-1 animate-spin" />}
               {loading ? "Adding..." : "Add"}
             </Button>
           </div>

@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { GearSixIcon } from "@phosphor-icons/react";
+import { GearSixIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import type { AddJobState } from "@/lib/use-add-job";
 import { ManualJobModal } from "@/components/manual-job-modal";
 import { ResumePickerList } from "@/components/resume-picker-list";
@@ -24,7 +24,7 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
   } = addJob;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !loading) {
+    if (e.key === "Enter" && !loading && url.trim()) {
       void submit();
     }
   };
@@ -70,6 +70,7 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
           disabled={loading || !url.trim()}
           size="default"
         >
+          {loading && <CircleNotchIcon size={14} weight="light" className="animate-spin" />}
           {loading ? "Adding..." : "Add"}
         </Button>
       </div>

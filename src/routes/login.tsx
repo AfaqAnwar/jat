@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { GithubLogoIcon } from "@phosphor-icons/react";
+import { GithubLogoIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Redirect } from "@/components/redirect";
 
@@ -13,7 +13,7 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
       <AuthLoading>
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <CircleNotchIcon size={24} weight="light" className="animate-spin text-muted-foreground" />
       </AuthLoading>
       <Unauthenticated>
         <LoginView />
@@ -47,7 +47,11 @@ function LoginView() {
         disabled={signingIn}
         className="flex cursor-pointer items-center gap-1.5 border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:opacity-50"
       >
-        <GithubLogoIcon size={12} weight="light" />
+        {signingIn ? (
+          <CircleNotchIcon size={12} weight="light" className="animate-spin" />
+        ) : (
+          <GithubLogoIcon size={12} weight="light" />
+        )}
         {signingIn ? "Signing in..." : "GitHub Login"}
       </button>
     </div>
