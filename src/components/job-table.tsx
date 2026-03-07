@@ -45,7 +45,7 @@ export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) 
 
   return (
     <>
-      <div className="rounded-none border sm:h-full sm:overflow-y-auto sm:overscroll-contain">
+      <div className="rounded-none border sm:max-h-full sm:overflow-y-auto sm:overscroll-contain">
         <Table className="hidden table-fixed sm:table">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
