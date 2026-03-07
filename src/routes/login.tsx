@@ -11,7 +11,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-background overflow-hidden overscroll-none touch-none">
       <AuthLoading>
         <CircleNotchIcon size={24} weight="light" className="animate-spin text-muted-foreground" />
       </AuthLoading>
