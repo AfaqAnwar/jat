@@ -1,6 +1,6 @@
 <div align="center">
   <img src="public/JAJT.png" alt="JAT" width="80" />
-  <h1>Just Another Job Tracker</h1>
+  <h1>Just Another <i>Job</i> Tracker</h1>
   <p>A frictionless job application tracker. Paste a URL, get a parsed entry. That's it.</p>
   <br />
   <a href="https://justanotherjobtracker.com"><strong>justanotherjobtracker.com</strong></a>
@@ -8,20 +8,24 @@
 
 ## Overview
 
-I built JAT in my spare time because I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. I wanted something where I could just paste a URL and have the rest filled in for me.
+JAT (Just Another Tracker), or in this case Just Another _Job_ Tracker is a tool I primarily built for myself. I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. Copying the details of each application would become cumbersome and caused a ton of friction in the process. Obviously you don't need to track every application, but I like keeping track of things, a lot of things, in my life. This is where the concept of JAT was born. A tracking system, which for now is used to track job applications.
 
+---
 The whole thing runs on free tiers. The frontend is hosted on GitHub Pages, the backend on Convex's free plan, and AI parsing uses Google Gemini's free API. If you'd rather run your own instance, it's straightforward to self-host. Everything is open source and the setup takes a few minutes.
 
-It's fully mobile-friendly too. Try it on your phone. The entire UI adapts with cards instead of a table, bottom-sheet editors, a sticky add button, and swipe-friendly drawers.
+I also made it a goal to be platform agnostic because I believe in developing great, polished experiences that can be utilized effectively, regardless of the device medium (laptop, phone or tablet). Thus, the entire UI/UX adapts completely to whichever device you are on.
 
-Paste the URL of a job posting and JAT automatically extracts the role, company, salary, location, and more. Everything stays in a single, editable table you can sort and manage at a glance.
+---
+The concept is extremely simple, yet super effective. Paste the URL of a job posting and this tracker automatically extracts the role, company, salary, location, and more. Everything stays in a single, editable table you can sort and manage at a glance.
+
+---
 
 ### Features
 
-- **One-paste add.** Paste a job URL and JAT parses it into a structured entry via Google Gemini. Greenhouse and Lever postings are parsed from their APIs for higher accuracy.
+- **One-paste add.** Paste a job URL and the tracker will attempt to parse it into a structured entry via Google Gemini. Greenhouse and Lever postings are parsed from their APIs for higher accuracy. If a parse cannot occur, manual entry is prompted.
 - **Inline editing.** Click any cell in the table to edit it. Role, company, salary, location, dates, and status are all editable in place.
-- **Resume management.** Upload, rename, star a default, and attach resumes to individual applications. Supports "always use latest" mode.
-- **Location preference.** Set your US state and JAT automatically picks the closest matching location from multi-location postings.
+- **Resume management.** Upload, rename, star a default, and attach resumes to individual applications.
+- **Location preference.** Set your US state and the tracker will automatically pick the closest matching location from the posting.
 - **Mobile-friendly.** Responsive card layout on mobile with a detail sheet for editing and a sticky add-job button.
 - **Real-time sync.** Powered by Convex, so changes appear instantly across tabs and devices.
 
