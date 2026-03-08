@@ -118,7 +118,7 @@ export function ManualJobModal({
               <button
                 type="button"
                 onClick={() => setLocationType(cycleLocationType(locationType))}
-                className="flex w-24 shrink-0 cursor-pointer items-center justify-center gap-1 border px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                className="flex h-8 w-24 shrink-0 cursor-pointer items-center justify-center gap-1 border px-2 text-xs text-muted-foreground hover:text-foreground [&>*]:text-current"
                 aria-label={`Work model: ${LOC_TYPE_CONFIG[locationType].title}. Click to change.`}
               >
                 <LocationTypeIcon type={locationType} />
