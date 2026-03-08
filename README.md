@@ -8,15 +8,13 @@
 
 ## Overview
 
-JAT (Just Another Tracker), or in this case Just Another _Job_ Tracker is a tool I primarily built for myself. I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. Copying the details of each application would become cumbersome and caused a ton of friction in the process. Obviously you don't need to track every application, but I like keeping track of things, a lot of things, in my life. This is where the concept of JAT was born. A tracking system, which for now is used to track job applications.
+JAT (Just Another Tracker), or in this case Just Another _Job_ Tracker, is a tool I primarily built for myself. I was tired of manually tracking job applications in a spreadsheet. Copy a title here, paste a company name there, look up the salary range, update a status column. It added up. Copying the details of each application would become cumbersome and caused a ton of friction in the process. Obviously you don't need to track every application, but I like keeping track of things, a lot of things, in my life. This is where the concept of JAT was born. A tracking system, which for now is used to track job applications.
 
----
-The whole thing runs on free tiers. The frontend is hosted on GitHub Pages, the backend on Convex's free plan, and AI parsing uses Google Gemini's free API. If you'd rather run your own instance, it's straightforward to self-host. Everything is open source and the setup takes a few minutes.
+The whole thing runs on free tiers. The frontend is hosted on GitHub Pages, the backend on Convex's free plan, and AI parsing uses Google Gemini's free API. If you'd rather run your own instance, it's straightforward to self-host. Everything is open source, and the setup takes a few minutes.
 
-I also made it a goal to be platform agnostic because I believe in developing great, polished experiences that can be utilized effectively, regardless of the device medium (laptop, phone or tablet). Thus, the entire UI/UX adapts completely to whichever device you are on.
+I also made it a goal to be platform agnostic because I believe in developing great, polished experiences that can be utilized effectively, regardless of the device medium (laptop, phone, or tablet). The entire UI/UX adapts to whichever device you are on.
 
----
-The concept is extremely simple, yet super effective. Paste the URL of a job posting and this tracker automatically extracts the role, company, salary, location, and more. Everything stays in a single, editable table you can sort and manage at a glance.
+The concept is extremely simple, yet super effective. Paste the URL of a job posting and the tracker automatically extracts the role, company, salary, location, and more. Everything stays in a single, editable table you can sort and manage at a glance.
 
 ---
 
@@ -28,6 +26,14 @@ The concept is extremely simple, yet super effective. Paste the URL of a job pos
 - **Location preference.** Set your US state and the tracker will automatically pick the closest matching location from the posting.
 - **Mobile-friendly.** Responsive card layout on mobile with a detail sheet for editing and a sticky add-job button.
 - **Real-time sync.** Powered by Convex, so changes appear instantly across tabs and devices.
+
+### Known Limitations
+
+JAT parses job postings by fetching the page's raw HTML over HTTP and stripping it down to plain text, which is then sent to Google Gemini for structured extraction. It does not run a headless browser or execute JavaScript. This means **client-side rendered (CSR) and single-page application (SPA) job pages will not parse successfully.** When a site relies on JavaScript to load its content, the initial HTML response is typically an empty shell, leaving nothing meaningful for the parser to extract.
+
+Greenhouse and Lever postings are an exception — JAT detects these URLs and fetches structured data directly from their public APIs, bypassing HTML parsing entirely.
+
+> **Tip:** If a direct job posting URL fails to parse, try pasting the LinkedIn listing URL for the same role instead. Many company career pages render content client-side, but LinkedIn serves fully static HTML. In practice, LinkedIn listings parse very reliably.
 
 ### Tech Stack
 
@@ -137,6 +143,10 @@ The build injects a CSP meta tag via the `cspPlugin` in `vite.config.ts`. It res
 #### CNAME file
 
 `public/CNAME` contains `justanotherjobtracker.com` for GitHub Pages custom domain configuration. If you fork this and deploy to your own domain, update or remove this file. If you're not using GitHub Pages, the file is harmless but unnecessary.
+
+### Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. For immediate bug reports or usage issues with the hosted version, please email [anwarafaq@outlook.com](mailto:anwarafaq@outlook.com).
 
 ---
 

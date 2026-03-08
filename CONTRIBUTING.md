@@ -1,6 +1,10 @@
 # Contributing
 
-Contributions are welcome. Whether it's a bug fix, feature, or documentation improvement, feel free to open a PR.
+JAT was built primarily around a feature set that I personally needed. That said, if you have a great idea, spot a bug, or want to improve something, contributions are absolutely welcome. You can open an issue to discuss it first or submit a pull request directly.
+
+## Before you start
+
+For non-trivial changes (new features, architectural refactors, etc.), please **open an issue first**. This avoids duplicate work and gives a chance to discuss the approach before you invest time writing code. Small bug fixes, typo corrections, and documentation improvements can go straight to a PR.
 
 ## Prerequisites
 
@@ -12,7 +16,7 @@ Contributions are welcome. Whether it's a bug fix, feature, or documentation imp
 
 1. **Fork** the repository and clone your fork.
 2. Follow the [Self-Hosting](README.md#self-hosting) steps in the README to get a working local setup.
-3. Create a feature branch: `git checkout -b feat/my-feature`
+3. Create a feature branch with a descriptive name: `git checkout -b feat/export-csv` or `git checkout -b fix/parse-timeout`
 
 ## Project structure
 
@@ -64,10 +68,13 @@ docs: update self-hosting instructions
 ## Submitting a PR
 
 1. Make sure `bun lint` and `bun run build` pass locally.
-2. Keep PRs focused. One feature or fix per PR.
-3. Include a brief description of what changed and why.
-4. If your change touches the Convex schema or adds a new mutation/query, mention it in the PR description.
+2. Test your changes end-to-end — the app should build and the Convex backend should deploy cleanly.
+3. Keep PRs focused. One logical change per pull request. If you're fixing a bug and adding a feature, split them into separate PRs.
+4. Include a clear description of what changed and why. Screenshots or recordings are appreciated for UI changes.
+5. If your change touches the Convex schema or adds a new mutation/query, mention it in the PR description.
 
 ## Reporting issues
 
 Open an issue on GitHub. Include steps to reproduce, expected behavior, and what actually happened. Screenshots or console output are helpful.
+
+For immediate bug reports or usage issues with the hosted version at [justanotherjobtracker.com](https://justanotherjobtracker.com), please email [anwarafaq@outlook.com](mailto:anwarafaq@outlook.com) directly.
