@@ -1,16 +1,55 @@
 const STATE_TO_ABBR: Record<string, string> = {
-  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-  colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-  hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-  kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-  massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS",
-  missouri: "MO", montana: "MT", nebraska: "NE", nevada: "NV",
-  "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
-  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK",
-  oregon: "OR", pennsylvania: "PA", "rhode island": "RI", "south carolina": "SC",
-  "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT", vermont: "VT",
-  virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-  wyoming: "WY", "district of columbia": "DC",
+  alabama: "AL",
+  alaska: "AK",
+  arizona: "AZ",
+  arkansas: "AR",
+  california: "CA",
+  colorado: "CO",
+  connecticut: "CT",
+  delaware: "DE",
+  florida: "FL",
+  georgia: "GA",
+  hawaii: "HI",
+  idaho: "ID",
+  illinois: "IL",
+  indiana: "IN",
+  iowa: "IA",
+  kansas: "KS",
+  kentucky: "KY",
+  louisiana: "LA",
+  maine: "ME",
+  maryland: "MD",
+  massachusetts: "MA",
+  michigan: "MI",
+  minnesota: "MN",
+  mississippi: "MS",
+  missouri: "MO",
+  montana: "MT",
+  nebraska: "NE",
+  nevada: "NV",
+  "new hampshire": "NH",
+  "new jersey": "NJ",
+  "new mexico": "NM",
+  "new york": "NY",
+  "north carolina": "NC",
+  "north dakota": "ND",
+  ohio: "OH",
+  oklahoma: "OK",
+  oregon: "OR",
+  pennsylvania: "PA",
+  "rhode island": "RI",
+  "south carolina": "SC",
+  "south dakota": "SD",
+  tennessee: "TN",
+  texas: "TX",
+  utah: "UT",
+  vermont: "VT",
+  virginia: "VA",
+  washington: "WA",
+  "west virginia": "WV",
+  wisconsin: "WI",
+  wyoming: "WY",
+  "district of columbia": "DC",
 };
 
 /** Replace full state name with 2-letter abbreviation in a location string. */
@@ -67,7 +106,7 @@ export function extractSalaryRange(raw: string): string {
 
   // Match "$X - $Y" or "$X-$Y" with optional commas and K shorthand
   const rangeMatch = cleaned.match(
-    /\$[\d,]+(?:\.\d+)?[Kk]?\s*[-–—]\s*\$[\d,]+(?:\.\d+)?[Kk]?/
+    /\$[\d,]+(?:\.\d+)?[Kk]?\s*[-–—]\s*\$[\d,]+(?:\.\d+)?[Kk]?/,
   );
   if (rangeMatch) {
     const formatted = formatDollars(expandK(rangeMatch[0]));
@@ -85,17 +124,20 @@ export function extractSalaryRange(raw: string): string {
 
 /** Convert K/k shorthand to full thousands (e.g. "$150K" → "$150,000") */
 function expandK(salary: string): string {
-  return salary.replace(/\$(\d+(?:,\d+)?(?:\.\d+)?)[Kk]/g, (_match, num: string) => {
-    const n = parseFloat(num.replace(/,/g, "")) * 1000;
-    return `$${n.toLocaleString("en-US")}`;
-  });
+  return salary.replace(
+    /\$(\d+(?:,\d+)?(?:\.\d+)?)[Kk]/g,
+    (_match, num: string) => {
+      const n = parseFloat(num.replace(/,/g, "")) * 1000;
+      return `$${n.toLocaleString("en-US")}`;
+    },
+  );
 }
 
 /** Ensure every "$X" token has proper comma-separated formatting. */
 function formatDollars(salary: string): string {
   return salary.replace(/\$[\d,]+/g, (token) => {
     const n = parseInt(token.slice(1).replace(/,/g, ""), 10);
-    return isNaN(n) ? token : `$${n.toLocaleString("en-US")}`;
+    return Number.isNaN(n) ? token : `$${n.toLocaleString("en-US")}`;
   });
 }
 
@@ -167,23 +209,44 @@ export function htmlToText(html: string): string {
  * Matched case-insensitively. Order matters: longer/more-specific first.
  */
 const SECTOR_PREFIXES = [
-  "full-stack", "full stack", "fullstack",
-  "front-end", "front end", "frontend",
-  "back-end", "back end", "backend",
-  "platform", "infrastructure", "embedded", "mobile",
-  "devops", "data", "cloud", "security", "ml", "ai",
-  "ui", "ux", "ui/ux", "ux/ui",
+  "full-stack",
+  "full stack",
+  "fullstack",
+  "front-end",
+  "front end",
+  "frontend",
+  "back-end",
+  "back end",
+  "backend",
+  "platform",
+  "infrastructure",
+  "embedded",
+  "mobile",
+  "devops",
+  "data",
+  "cloud",
+  "security",
+  "ml",
+  "ai",
+  "ui",
+  "ux",
+  "ui/ux",
+  "ux/ui",
 ];
 
 const LEVEL_PREFIXES = [
-  "senior", "sr\\.?", "staff", "principal", "lead",
-  "junior", "jr\\.?", "associate", "distinguished",
+  "senior",
+  "sr\\.?",
+  "staff",
+  "principal",
+  "lead",
+  "junior",
+  "jr\\.?",
+  "associate",
+  "distinguished",
 ];
 
-const SECTOR_PREFIX_RE = new RegExp(
-  `^(${SECTOR_PREFIXES.join("|")})\\s+`,
-  "i",
-);
+const SECTOR_PREFIX_RE = new RegExp(`^(${SECTOR_PREFIXES.join("|")})\\s+`, "i");
 
 const LEVEL_THEN_SECTOR_RE = new RegExp(
   `^((?:${LEVEL_PREFIXES.join("|")})\\s+)(${SECTOR_PREFIXES.join("|")})\\s+`,
@@ -198,7 +261,10 @@ const LEVEL_THEN_SECTOR_RE = new RegExp(
  * 4. Reject metadata noise (long slashes, multiple commas).
  * 5. Clear sector if redundant with role.
  */
-export function splitRoleAndSector(rawRole: string, rawSector: string): { role: string; sector: string } {
+export function splitRoleAndSector(
+  rawRole: string,
+  rawSector: string,
+): { role: string; sector: string } {
   let role = rawRole.trim();
   let sector = rawSector.trim();
 
@@ -219,8 +285,14 @@ export function splitRoleAndSector(rawRole: string, rawSector: string): { role: 
   if (dashMatch) {
     const baseRole = dashMatch[1].trim();
     const suffix = dashMatch[2].trim();
-    const isLevelSuffix = /^all\s+levels?$/i.test(suffix) || /^(i{1,3}|iv|v|[1-5])$/i.test(suffix);
-    if (baseRole.length >= 3 && suffix.length >= 2 && suffix.length <= 50 && !isLevelSuffix) {
+    const isLevelSuffix =
+      /^all\s+levels?$/i.test(suffix) || /^(i{1,3}|iv|v|[1-5])$/i.test(suffix);
+    if (
+      baseRole.length >= 3 &&
+      suffix.length >= 2 &&
+      suffix.length <= 50 &&
+      !isLevelSuffix
+    ) {
       role = baseRole;
       if (!sector) sector = suffix;
     }
@@ -228,8 +300,8 @@ export function splitRoleAndSector(rawRole: string, rawSector: string): { role: 
 
   // 2. Strip parenthetical suffix: "Engineer II (JavaScript)" → role + " (JavaScript)" appended to sector
   const parenMatch = role.match(/\s*\(([^)]+)\)\s*$/);
-  if (parenMatch) {
-    role = role.slice(0, parenMatch.index!).trim();
+  if (parenMatch && parenMatch.index !== undefined) {
+    role = role.slice(0, parenMatch.index).trim();
     const parenContent = parenMatch[1].trim();
     sector = sector ? `${sector} (${parenContent})` : parenContent;
   }
@@ -297,7 +369,9 @@ function normalizeForComparison(str: string): string {
 /** Coerce raw locations from the AI response into a string array. */
 export function coerceLocationList(raw: unknown): string[] {
   if (Array.isArray(raw)) {
-    return raw.filter((l): l is string => typeof l === "string" && l.length > 0);
+    return raw.filter(
+      (l): l is string => typeof l === "string" && l.length > 0,
+    );
   }
   if (typeof raw === "string" && raw) return [raw];
   return [];

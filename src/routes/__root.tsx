@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute, useRouter } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useRouter } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
@@ -19,6 +19,7 @@ function RootError({ error }: { error: Error }) {
       <h1 className="text-xl font-bold">Something went wrong</h1>
       <p className="text-sm text-muted-foreground">{error.message}</p>
       <button
+        type="button"
         onClick={() => void router.navigate({ to: "/" })}
         className="border border-border px-3 py-1.5 text-sm hover:bg-muted"
       >
@@ -34,6 +35,7 @@ function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
       <h1 className="text-xl font-bold">Page not found</h1>
       <button
+        type="button"
         onClick={() => void router.navigate({ to: "/" })}
         className="border border-border px-3 py-1.5 text-sm hover:bg-muted"
       >

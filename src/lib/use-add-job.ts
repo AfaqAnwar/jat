@@ -1,14 +1,14 @@
-import { useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { todayISO } from "@/lib/format-date";
+import { getDefaultResumeId } from "@/lib/get-default-resume";
+import { normalizeUrl } from "@/lib/normalize-url";
+import { resolveLocation } from "@/lib/resolve-location";
+import { showError, showSuccess } from "@/lib/toast-utils";
+import type { ManualEntry, ManualJobFields } from "@/lib/types";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import type { ManualEntry, ManualJobFields } from "@/lib/types";
-import { toast } from "sonner";
-import { showSuccess, showError } from "@/lib/toast-utils";
-import { normalizeUrl } from "@/lib/normalize-url";
-import { getDefaultResumeId } from "@/lib/get-default-resume";
-import { resolveLocation } from "@/lib/resolve-location";
-import { todayISO } from "@/lib/format-date";
 
 export type AddJobState = ReturnType<typeof useAddJob>;
 
@@ -23,15 +23,21 @@ export function useAddJob() {
   const resumes = useQuery(api.resumes.list);
   const prefs = useQuery(api.preferences.get);
 
-  const defaultResumeId = getDefaultResumeId(resumes, prefs?.alwaysUseLatestResume ?? false);
+  const defaultResumeId = getDefaultResumeId(
+    resumes,
+    prefs?.alwaysUseLatestResume ?? false,
+  );
   const activeResumeId = resumeOverride || defaultResumeId;
   const hasMultipleResumes = (resumes?.length ?? 0) > 1;
 
   const activeResumeName = resumes?.find((r) => r._id === activeResumeId)?.name;
-  const defaultResumeName = resumes?.find((r) => r._id === defaultResumeId)?.name;
+  const defaultResumeName = resumes?.find(
+    (r) => r._id === defaultResumeId,
+  )?.name;
 
   const errorMessage = (error: string | undefined): string => {
-    if (error === "spa") return "This site loads dynamically and can't be read automatically.";
+    if (error === "spa")
+      return "This site loads dynamically and can't be read automatically.";
     if (error === "fetch") return "Couldn't reach that URL.";
     return "Couldn't extract job data automatically.";
   };
@@ -56,7 +62,10 @@ export function useAddJob() {
         return false;
       }
 
-      const resolvedLocation = resolveLocation(result.locations, prefs?.state ?? undefined);
+      const resolvedLocation = resolveLocation(
+        result.locations,
+        prefs?.state ?? undefined,
+      );
 
       await addJob({
         url: normalized,
@@ -65,11 +74,14 @@ export function useAddJob() {
         company: result.company || "Unknown Company",
         salary: result.salary === "" ? undefined : result.salary,
         location: resolvedLocation === "" ? undefined : resolvedLocation,
-        locationType: result.locationType !== "onsite" ? result.locationType : undefined,
+        locationType:
+          result.locationType !== "onsite" ? result.locationType : undefined,
         dateApplied: todayISO(),
         datePosted: result.datePosted === "" ? undefined : result.datePosted,
         status: "applied",
-        resumeId: activeResumeId ? (activeResumeId as Id<"resumes">) : undefined,
+        resumeId: activeResumeId
+          ? (activeResumeId as Id<"resumes">)
+          : undefined,
       });
 
       setUrl("");
@@ -86,7 +98,10 @@ export function useAddJob() {
       return true;
     } catch (err) {
       console.error("Failed to parse job:", err);
-      setManualEntry({ url: normalized, reason: "Something went wrong while parsing." });
+      setManualEntry({
+        url: normalized,
+        reason: "Something went wrong while parsing.",
+      });
       return false;
     } finally {
       setLoading(false);
@@ -104,7 +119,8 @@ export function useAddJob() {
         company: fields.company,
         salary: fields.salary === "" ? undefined : fields.salary,
         location: fields.location === "" ? undefined : fields.location,
-        locationType: fields.locationType !== "onsite" ? fields.locationType : undefined,
+        locationType:
+          fields.locationType !== "onsite" ? fields.locationType : undefined,
         dateApplied: fields.dateApplied,
         datePosted: fields.datePosted === "" ? undefined : fields.datePosted,
         status: fields.status,

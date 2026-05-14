@@ -1,10 +1,17 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import {
+  LOC_TYPE_CONFIG,
+  LocationTypeIcon,
+} from "@/components/location-type-icon";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,14 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LocationTypeIcon, LOC_TYPE_CONFIG } from "@/components/location-type-icon";
-import { cycleLocationType } from "@/lib/types";
-import type { LocType, Resume, ManualEntry, ManualJobFields } from "@/lib/types";
-import type { Id } from "../../convex/_generated/dataModel";
 import { todayISO } from "@/lib/format-date";
+import type {
+  LocType,
+  ManualEntry,
+  ManualJobFields,
+  Resume,
+} from "@/lib/types";
+import { cycleLocationType } from "@/lib/types";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export function ManualJobModal({
   entry,

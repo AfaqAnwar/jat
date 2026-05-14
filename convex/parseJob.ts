@@ -1,18 +1,18 @@
-import { action, internalMutation } from "./_generated/server";
-import { internal } from "./_generated/api";
-import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { rateLimiter } from "./lib/rateLimits";
+import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import { action, internalMutation } from "./_generated/server";
 import {
-  normalizeLocation,
   cleanLocationName,
-  extractSalaryRange,
-  resolveRelativeDate,
-  decodeEntities,
-  htmlToText,
   coerceLocationList,
+  decodeEntities,
+  extractSalaryRange,
+  htmlToText,
+  normalizeLocation,
+  resolveRelativeDate,
   splitRoleAndSector,
 } from "./lib/normalize";
+import { rateLimiter } from "./lib/rateLimits";
 
 type ParseResult = {
   role: string;
@@ -177,8 +177,9 @@ async function fetchPageText(url: string): Promise<FetchResult> {
 function tryGreenhouseApi(url: string): string | null {
   const parsed = new URL(url);
 
-  const ghBoardMatch = parsed.hostname === "boards.greenhouse.io"
-    && parsed.pathname.match(/^\/([^/]+)\/jobs\/(\d+)/);
+  const ghBoardMatch =
+    parsed.hostname === "boards.greenhouse.io" &&
+    parsed.pathname.match(/^\/([^/]+)\/jobs\/(\d+)/);
   if (ghBoardMatch) {
     return `https://boards-api.greenhouse.io/v1/boards/${ghBoardMatch[1]}/jobs/${ghBoardMatch[2]}`;
   }
@@ -254,20 +255,28 @@ function parseJsonJobResponse(body: string): FetchResult {
 
     const push = (label: string, val: unknown) => {
       if (!val) return;
-      parts.push(`${label}: ${typeof val === "string" ? val : JSON.stringify(val)}`);
+      parts.push(
+        `${label}: ${typeof val === "string" ? val : JSON.stringify(val)}`,
+      );
     };
 
     push("Job Title", d.title || d.text);
-    push("Company", d.company_name || d.company?.name || d.board?.name || d.categories?.team);
+    push(
+      "Company",
+      d.company_name || d.company?.name || d.board?.name || d.categories?.team,
+    );
     push("Location", d.location?.name || d.categories?.location);
     push("Salary", d.pay || d.salary || d.compensation);
 
     const content = d.content || d.description || d.descriptionPlain || "";
     if (content) parts.push(htmlToText(decodeEntities(content)));
 
-    const salaryFromMeta = (d.metadata ?? d.compliance ?? [])
-      .find((m: { value?: string; name?: string }) => String(m.value ?? m.name ?? "").includes("$"));
-    if (salaryFromMeta) push("Salary", salaryFromMeta.value ?? salaryFromMeta.name);
+    const salaryFromMeta = (d.metadata ?? d.compliance ?? []).find(
+      (m: { value?: string; name?: string }) =>
+        String(m.value ?? m.name ?? "").includes("$"),
+    );
+    if (salaryFromMeta)
+      push("Salary", salaryFromMeta.value ?? salaryFromMeta.name);
 
     const text = parts.join("\n\n");
     if (text.length < 50) return { error: "empty" };
@@ -277,7 +286,9 @@ function parseJsonJobResponse(body: string): FetchResult {
   }
 }
 
-async function callGemini(text: string): Promise<Record<string, unknown> | null> {
+async function callGemini(
+  text: string,
+): Promise<Record<string, unknown> | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error("GEMINI_API_KEY is not configured");
@@ -287,7 +298,7 @@ async function callGemini(text: string): Promise<Record<string, unknown> | null>
   let response: Response;
   try {
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b-it:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -332,7 +343,11 @@ function normalizeAiResult(parsed: Record<string, unknown>): ParseResult {
 
   const rawModel = String(parsed.workModel ?? "").toLowerCase();
   const locationType: ParseResult["locationType"] =
-    rawModel === "remote" ? "remote" : rawModel === "hybrid" ? "hybrid" : "onsite";
+    rawModel === "remote"
+      ? "remote"
+      : rawModel === "hybrid"
+        ? "hybrid"
+        : "onsite";
 
   if (locations.length === 0 && locationType === "remote") {
     locations.push("US");

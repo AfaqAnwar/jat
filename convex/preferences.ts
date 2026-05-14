@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { syncResumeStarsForLatestPref } from "./lib/resumeDefaults";
 import { assertValidStateAbbrev } from "./lib/validators";
@@ -39,7 +39,9 @@ export const setState = mutation({
   handler: async (ctx, { state }) => {
     const userId = await requireAuth(ctx);
     assertValidStateAbbrev(state);
-    await upsertPreferences(ctx, userId, { state: state === "" ? undefined : state });
+    await upsertPreferences(ctx, userId, {
+      state: state === "" ? undefined : state,
+    });
   },
 });
 

@@ -1,7 +1,11 @@
+import { useAuthActions } from "@convex-dev/auth/react";
+import {
+  CircleNotchIcon,
+  GithubLogoIcon,
+  GoogleLogoIcon,
+} from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { GithubLogoIcon, GoogleLogoIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Redirect } from "@/components/redirect";
 
@@ -13,7 +17,11 @@ function LoginPage() {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-background overflow-hidden overscroll-none touch-none">
       <AuthLoading>
-        <CircleNotchIcon size={24} weight="light" className="animate-spin text-muted-foreground" />
+        <CircleNotchIcon
+          size={24}
+          weight="light"
+          className="animate-spin text-muted-foreground"
+        />
       </AuthLoading>
       <Unauthenticated>
         <LoginView />
@@ -34,7 +42,9 @@ function LoginView() {
   const handleSignIn = async (provider: Provider) => {
     setSigningInWith(provider);
     try {
-      await signIn(provider, { redirectTo: window.location.origin + import.meta.env.BASE_URL });
+      await signIn(provider, {
+        redirectTo: window.location.origin + import.meta.env.BASE_URL,
+      });
     } catch (err) {
       console.error("Sign-in failed:", err);
       setSigningInWith(null);
@@ -43,7 +53,11 @@ function LoginView() {
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <img src={`${import.meta.env.BASE_URL}JAJT.png`} alt="JAT" className="h-24 w-24" />
+      <img
+        src={`${import.meta.env.BASE_URL}JAJT.png`}
+        alt="JAT"
+        className="h-24 w-24"
+      />
       <div className="flex flex-col gap-2">
         <OAuthButton
           provider="github"
@@ -82,6 +96,7 @@ function OAuthButton({
 
   return (
     <button
+      type="button"
       onClick={() => onSignIn(provider)}
       disabled={isDisabled}
       className="flex w-40 cursor-pointer items-center justify-center gap-1.5 border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
@@ -95,4 +110,3 @@ function OAuthButton({
     </button>
   );
 }
-

@@ -2,7 +2,9 @@ import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 export type Status = Doc<"jobs">["status"];
 export type LocType = NonNullable<Doc<"jobs">["locationType"]>;
-export type Job = Omit<Doc<"jobs">, "resumeName"> & { resumeName: string | null };
+export type Job = Omit<Doc<"jobs">, "resumeName"> & {
+  resumeName: string | null;
+};
 export type Resume = Doc<"resumes">;
 
 export const STATUSES = [

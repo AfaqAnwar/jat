@@ -1,4 +1,7 @@
+import { CircleNotchIcon, GearSixIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { ManualJobModal } from "@/components/manual-job-modal";
+import { ResumePickerList } from "@/components/resume-picker-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -6,20 +9,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { GearSixIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import type { AddJobState } from "@/lib/use-add-job";
-import { ManualJobModal } from "@/components/manual-job-modal";
-import { ResumePickerList } from "@/components/resume-picker-list";
 
 export function AddJobBar({ addJob }: { addJob: AddJobState }) {
   const [gearOpen, setGearOpen] = useState(false);
   const {
-    url, setUrl, loading, submit,
-    manualEntry, submitManual, dismissManualEntry,
-    resumeOverride, selectResume,
+    url,
+    setUrl,
+    loading,
+    submit,
+    manualEntry,
+    submitManual,
+    dismissManualEntry,
+    resumeOverride,
+    selectResume,
     resumes,
     activeResumeId,
-    activeResumeName, defaultResumeId, defaultResumeName,
+    activeResumeName,
+    defaultResumeId,
+    defaultResumeName,
     hasMultipleResumes,
   } = addJob;
 
@@ -44,14 +52,26 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
           <Popover open={gearOpen} onOpenChange={setGearOpen}>
             <PopoverTrigger asChild>
               <button
+                type="button"
                 className="flex cursor-pointer items-center justify-center rounded-none border px-2 text-muted-foreground hover:text-foreground"
-                title={activeResumeName ? `Resume: ${activeResumeName}` : "Select resume"}
-                aria-label={activeResumeName ? `Resume: ${activeResumeName}` : "Select resume"}
+                title={
+                  activeResumeName
+                    ? `Resume: ${activeResumeName}`
+                    : "Select resume"
+                }
+                aria-label={
+                  activeResumeName
+                    ? `Resume: ${activeResumeName}`
+                    : "Select resume"
+                }
               >
                 <GearSixIcon size={16} weight="light" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="max-h-64 w-56 overflow-y-auto rounded-none p-2">
+            <PopoverContent
+              align="end"
+              className="max-h-64 w-56 overflow-y-auto rounded-none p-2"
+            >
               <ResumePickerList
                 resumes={resumes ?? []}
                 resumeOverride={resumeOverride}
@@ -70,7 +90,13 @@ export function AddJobBar({ addJob }: { addJob: AddJobState }) {
           disabled={loading || !url.trim()}
           size="default"
         >
-          {loading && <CircleNotchIcon size={14} weight="light" className="animate-spin" />}
+          {loading && (
+            <CircleNotchIcon
+              size={14}
+              weight="light"
+              className="animate-spin"
+            />
+          )}
           {loading ? "Adding..." : "Add"}
         </Button>
       </div>

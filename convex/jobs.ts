@@ -1,16 +1,16 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import {
-  locationTypeValidator,
-  statusValidator,
-  assertHttpUrl,
-  assertMaxLength,
-  MAX_SHORT,
-  MAX_URL,
-} from "./lib/validators";
+import { mutation, query } from "./_generated/server";
 import { requireAuth, requireOwnership } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import {
+  assertHttpUrl,
+  assertMaxLength,
+  locationTypeValidator,
+  MAX_SHORT,
+  MAX_URL,
+  statusValidator,
+} from "./lib/validators";
 
 export const list = query({
   args: {},
@@ -23,15 +23,15 @@ export const list = query({
       .order("desc")
       .collect();
 
-    const resumeIds = [...new Set(
-      jobs.map((j) => j.resumeId).filter(
-        (id): id is Id<"resumes"> => id !== undefined,
+    const resumeIds = [
+      ...new Set(
+        jobs
+          .map((j) => j.resumeId)
+          .filter((id): id is Id<"resumes"> => id !== undefined),
       ),
-    )];
+    ];
     const resumes = await Promise.all(resumeIds.map((id) => ctx.db.get(id)));
-    const resumeMap = new Map(
-      resumeIds.map((id, i) => [id, resumes[i]]),
-    );
+    const resumeMap = new Map(resumeIds.map((id, i) => [id, resumes[i]]));
 
     return jobs.map((job) => {
       const resume = job.resumeId ? resumeMap.get(job.resumeId) : null;

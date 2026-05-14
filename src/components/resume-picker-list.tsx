@@ -1,7 +1,7 @@
-import type { Id } from "../../convex/_generated/dataModel";
-import type { Resume } from "@/lib/types";
 import { CheckIcon } from "@phosphor-icons/react";
 import { ResumePreviewLink } from "@/components/resume-preview-link";
+import type { Resume } from "@/lib/types";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export function ResumePickerList({
   resumes,
@@ -34,13 +34,17 @@ export function ResumePickerList({
               >
                 <button
                   type="button"
-                  onClick={() => onSelect(r._id === defaultResumeId ? "" : r._id)}
+                  onClick={() =>
+                    onSelect(r._id === defaultResumeId ? "" : r._id)
+                  }
                   aria-pressed={isActive}
                   className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left"
                 >
                   <span className="truncate">{r.name}</span>
                   {!resumeOverride && r._id === defaultResumeId && (
-                    <span className="shrink-0 text-xs text-muted-foreground">(default)</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      (default)
+                    </span>
                   )}
                 </button>
                 <ResumePreviewLink
@@ -61,6 +65,7 @@ export function ResumePickerList({
         Resume for this submission
       </p>
       <button
+        type="button"
         onClick={() => onSelect("")}
         aria-pressed={!resumeOverride}
         className="flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent min-w-0"
@@ -68,10 +73,13 @@ export function ResumePickerList({
         <span className="w-4 shrink-0">
           {!resumeOverride && <CheckIcon size={14} weight="light" />}
         </span>
-        <span className="truncate">Default{defaultResumeName ? ` (${defaultResumeName})` : ""}</span>
+        <span className="truncate">
+          Default{defaultResumeName ? ` (${defaultResumeName})` : ""}
+        </span>
       </button>
       {resumes.map((r) => (
         <button
+          type="button"
           key={r._id}
           onClick={() => onSelect(r._id)}
           aria-pressed={resumeOverride === r._id}

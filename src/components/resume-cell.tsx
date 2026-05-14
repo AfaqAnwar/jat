@@ -1,6 +1,6 @@
-import type { Job, Resume, ResumeId } from "@/lib/types";
-import { ResumeSelect } from "@/components/resume-select";
 import { ResumePreviewLink } from "@/components/resume-preview-link";
+import { ResumeSelect } from "@/components/resume-select";
+import type { Job, Resume, ResumeId } from "@/lib/types";
 
 export function ResumeCell({
   job,

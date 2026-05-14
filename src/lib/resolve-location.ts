@@ -16,7 +16,10 @@ function extractState(location: string): string | null {
 }
 
 /** Pick the location matching the user's state from a list, falling back to the first. */
-export function resolveLocation(locations: string[], userState: string | undefined): string {
+export function resolveLocation(
+  locations: string[],
+  userState: string | undefined,
+): string {
   if (locations.length === 0) return "";
   if (locations.length === 1 || !userState) return locations[0];
 

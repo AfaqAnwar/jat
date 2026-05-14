@@ -1,17 +1,17 @@
-import { useState, useRef, useCallback } from "react";
-import type { Job, Resume, ResumeId } from "@/lib/types";
 import { CheckIcon } from "@phosphor-icons/react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { useCallback, useRef, useState } from "react";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import type { Job, Resume, ResumeId } from "@/lib/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 function ResumeItem({
@@ -68,7 +68,9 @@ export function ResumeSelect({
 
   if (!canEdit) {
     return (
-      <span className={`truncate text-sm ${nameClass || "text-muted-foreground"}`}>
+      <span
+        className={`truncate text-sm ${nameClass || "text-muted-foreground"}`}
+      >
         {displayName}
       </span>
     );
@@ -76,8 +78,8 @@ export function ResumeSelect({
 
   const trigger = (
     <button
-      ref={triggerRef}
       type="button"
+      ref={triggerRef}
       onClick={() => setOpen(true)}
       className={`min-w-0 max-w-full cursor-pointer truncate text-left text-sm ${valueLabelClassName ?? ""} ${nameClass}`}
     >
@@ -121,9 +123,7 @@ export function ResumeSelect({
           <DrawerHeader>
             <DrawerTitle>Select Resume</DrawerTitle>
           </DrawerHeader>
-          <div className="max-h-[60dvh] overflow-y-auto px-2 pb-4">
-            {items}
-          </div>
+          <div className="max-h-[60dvh] overflow-y-auto px-2 pb-4">{items}</div>
         </DrawerContent>
       </Drawer>
     </>

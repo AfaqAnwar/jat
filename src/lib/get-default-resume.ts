@@ -1,5 +1,5 @@
-import type { Id } from "../../convex/_generated/dataModel";
 import type { Resume } from "@/lib/types";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export function getDefaultResumeId(
   resumes: Resume[] | undefined,
@@ -9,7 +9,9 @@ export function getDefaultResumeId(
   if (resumes.length === 1) return resumes[0]._id;
 
   if (alwaysUseLatest) {
-    const sorted = [...resumes].sort((a, b) => a._creationTime - b._creationTime);
+    const sorted = [...resumes].sort(
+      (a, b) => a._creationTime - b._creationTime,
+    );
     return sorted[sorted.length - 1]._id;
   }
 

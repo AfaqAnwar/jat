@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { checkMaxLength } from "@/lib/toast-utils";
 
 export function EditableRoleCell({
@@ -26,7 +26,7 @@ export function EditableRoleCell({
       inputRef.current?.focus();
       inputRef.current?.select();
     }
-  }, [editing, field]);
+  }, [editing]);
 
   const startEditing = () => {
     setField("role");

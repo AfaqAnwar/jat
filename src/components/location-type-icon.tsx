@@ -1,4 +1,8 @@
-import { BuildingsIcon, WifiHighIcon, CircleHalfTiltIcon } from "@phosphor-icons/react";
+import {
+  BuildingsIcon,
+  CircleHalfTiltIcon,
+  WifiHighIcon,
+} from "@phosphor-icons/react";
 import type { LocType } from "@/lib/types";
 
 export const LOC_TYPE_CONFIG = {

@@ -1,10 +1,10 @@
-import fs from "fs";
-import path from "path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import fs from "node:fs";
+import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
+import { defineConfig } from "vite";
 
 const CSP = [
   "default-src 'self'",

@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/status-badge";
 import {
   Select,
   SelectContent,
@@ -5,7 +6,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatusBadge } from "@/components/status-badge";
 import { STATUSES, type Status } from "@/lib/types";
 
 export function StatusSelect({
@@ -16,10 +16,7 @@ export function StatusSelect({
   onValueChange: (status: Status) => void;
 }) {
   return (
-    <Select
-      value={value}
-      onValueChange={(v) => onValueChange(v as Status)}
-    >
+    <Select value={value} onValueChange={(v) => onValueChange(v as Status)}>
       <SelectTrigger className="h-auto w-auto cursor-pointer border-none bg-transparent p-0 shadow-none focus:ring-0 [&>svg]:hidden">
         <SelectValue>
           <StatusBadge status={value} />

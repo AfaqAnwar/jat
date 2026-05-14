@@ -1,17 +1,17 @@
+import { ArrowSquareOutIcon, TrashIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
-import type { Job, Resume, JobId, EditableJobField } from "@/lib/types";
+import { EditableCell } from "@/components/editable-cell";
+import { LocationTypeIcon } from "@/components/location-type-icon";
+import { ResumeSelect } from "@/components/resume-select";
+import { StatusSelect } from "@/components/status-select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EditableCell } from "@/components/editable-cell";
-import { StatusSelect } from "@/components/status-select";
-import { ResumeSelect } from "@/components/resume-select";
-import { LocationTypeIcon } from "@/components/location-type-icon";
+import type { EditableJobField, Job, JobId, Resume } from "@/lib/types";
 import { cycleLocationType } from "@/lib/types";
-import { TrashIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
 
 export function JobDetailModal({
   job,
@@ -71,7 +71,11 @@ export function JobDetailModal({
               <LocationTypeIcon
                 type={job.locationType}
                 onCycle={() =>
-                  onUpdate(job._id, "locationType", cycleLocationType(job.locationType))
+                  onUpdate(
+                    job._id,
+                    "locationType",
+                    cycleLocationType(job.locationType),
+                  )
                 }
               />
               <div className="min-w-0 flex-1">
@@ -108,13 +112,12 @@ export function JobDetailModal({
             <ResumeSelect
               job={job}
               resumes={resumes}
-              onUpdate={(resumeId) =>
-                onUpdate(job._id, "resumeId", resumeId)
-              }
+              onUpdate={(resumeId) => onUpdate(job._id, "resumeId", resumeId)}
             />
           </DetailRow>
           <div className="flex justify-end pt-2">
             <button
+              type="button"
               onClick={async () => {
                 await onDelete(job._id);
                 onClose();
@@ -131,7 +134,13 @@ export function JobDetailModal({
   );
 }
 
-function DetailRow({ label, children }: { label: string; children: ReactNode }) {
+function DetailRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <div className="grid grid-cols-[5rem_1fr] items-center gap-2">
       <span className="text-muted-foreground">{label}</span>
@@ -139,4 +148,3 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
     </div>
   );
 }
-

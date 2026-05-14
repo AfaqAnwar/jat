@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { ArrowSquareOutIcon, TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Job, Resume, JobId, Status, ResumeId, EditableJobField } from "@/lib/types";
+import { useState } from "react";
+import { EditableCell } from "@/components/editable-cell";
+import { EditableRoleCell } from "@/components/editable-role-cell";
+import { JobDetailModal } from "@/components/job-detail-modal";
+import { LocationTypeIcon } from "@/components/location-type-icon";
+import { ResumeCell } from "@/components/resume-cell";
+import { StatusSelect } from "@/components/status-select";
 import {
   Table,
   TableBody,
@@ -10,22 +15,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EditableCell } from "@/components/editable-cell";
-import { EditableRoleCell } from "@/components/editable-role-cell";
-import { StatusSelect } from "@/components/status-select";
-import { ResumeCell } from "@/components/resume-cell";
-import { LocationTypeIcon } from "@/components/location-type-icon";
+import { showError, showSuccess } from "@/lib/toast-utils";
+import type {
+  EditableJobField,
+  Job,
+  JobId,
+  Resume,
+  ResumeId,
+  Status,
+} from "@/lib/types";
 import { cycleLocationType } from "@/lib/types";
-import { JobDetailModal } from "@/components/job-detail-modal";
-import { TrashIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { showSuccess, showError } from "@/lib/toast-utils";
+import { api } from "../../convex/_generated/api";
 
-export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) {
+export function JobTable({
+  jobs,
+  resumes,
+}: {
+  jobs: Job[];
+  resumes: Resume[];
+}) {
   const updateJob = useMutation(api.jobs.update);
   const removeJob = useMutation(api.jobs.remove);
   const [editingRoleId, setEditingRoleId] = useState<JobId | null>(null);
   const [detailJobId, setDetailJobId] = useState<JobId | null>(null);
-  const detailJob = detailJobId ? jobs.find((j) => j._id === detailJobId) ?? null : null;
+  const detailJob = detailJobId
+    ? (jobs.find((j) => j._id === detailJobId) ?? null)
+    : null;
 
   const handleUpdate = (id: JobId, field: EditableJobField, value: string) => {
     void updateJob({ id, [field]: value === "" ? undefined : value });
@@ -43,18 +58,29 @@ export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) 
 
   return (
     <>
-      <div data-slot="table-container" className="rounded-none border sm:max-h-full sm:overflow-y-auto sm:overscroll-contain">
+      <div
+        data-slot="table-container"
+        className="rounded-none border sm:max-h-full sm:overflow-y-auto sm:overscroll-contain"
+      >
         <Table className="hidden table-fixed sm:table">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
               <TableHead className="w-[15%]">Role</TableHead>
               <TableHead className="w-[12%]">Company</TableHead>
-              <TableHead className="hidden w-[14%] md:table-cell">Salary</TableHead>
-              <TableHead className="hidden w-[14%] md:table-cell">Location</TableHead>
+              <TableHead className="hidden w-[14%] md:table-cell">
+                Salary
+              </TableHead>
+              <TableHead className="hidden w-[14%] md:table-cell">
+                Location
+              </TableHead>
               <TableHead className="w-[10%]">Applied</TableHead>
-              <TableHead className="hidden w-[10%] lg:table-cell">Posted</TableHead>
+              <TableHead className="hidden w-[10%] lg:table-cell">
+                Posted
+              </TableHead>
               <TableHead className="w-[10%]">Status</TableHead>
-              <TableHead className="hidden w-[14%] lg:table-cell">Resume</TableHead>
+              <TableHead className="hidden w-[14%] lg:table-cell">
+                Resume
+              </TableHead>
               <TableHead className="w-8" />
               <TableHead className="w-10" />
             </TableRow>
@@ -81,7 +107,10 @@ export function JobTable({ jobs, resumes }: { jobs: Job[]; resumes: Resume[] }) 
                   })
                 }
                 onResumeChange={(resumeId) =>
-                  void updateJob({ id: job._id, resumeId: resumeId as ResumeId })
+                  void updateJob({
+                    id: job._id,
+                    resumeId: resumeId as ResumeId,
+                  })
                 }
               />
             ))}
@@ -169,7 +198,10 @@ function DesktopJobRow({
       </TableCell>
       <TableCell className="hidden max-w-[200px] md:table-cell">
         <div className="flex items-center gap-1.5">
-          <LocationTypeIcon type={job.locationType} onCycle={onLocationTypeCycle} />
+          <LocationTypeIcon
+            type={job.locationType}
+            onCycle={onLocationTypeCycle}
+          />
           <div className="min-w-0 flex-1 truncate">
             <EditableCell
               value={job.location ?? ""}
@@ -211,6 +243,7 @@ function DesktopJobRow({
       </TableCell>
       <TableCell className="pr-4">
         <button
+          type="button"
           onClick={() => void onDelete(job._id)}
           className="cursor-pointer rounded-none p-1 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground hover:text-foreground!"
           aria-label="Delete"

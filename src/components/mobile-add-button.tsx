@@ -1,23 +1,29 @@
+import { CircleNotchIcon, PlusIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { ManualJobModal } from "@/components/manual-job-modal";
+import { ResumePickerList } from "@/components/resume-picker-list";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PlusIcon, CircleNotchIcon } from "@phosphor-icons/react";
+import { Input } from "@/components/ui/input";
 import type { AddJobState } from "@/lib/use-add-job";
-import { ManualJobModal } from "@/components/manual-job-modal";
-import { ResumePickerList } from "@/components/resume-picker-list";
 
 export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
   const [open, setOpen] = useState(false);
   const {
-    url, setUrl, loading, submit,
-    manualEntry, submitManual, dismissManualEntry,
-    resumeOverride, selectResume,
+    url,
+    setUrl,
+    loading,
+    submit,
+    manualEntry,
+    submitManual,
+    dismissManualEntry,
+    resumeOverride,
+    selectResume,
     resumes,
     activeResumeId,
     defaultResumeId,
@@ -36,10 +42,15 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
 
   const handleDialogChange = (v: boolean) => {
     setOpen(v);
-    if (!v) { setUrl(""); selectResume(""); }
+    if (!v) {
+      setUrl("");
+      selectResume("");
+    }
   };
 
-  const defaultResumeName = resumes?.find((r) => r._id === defaultResumeId)?.name;
+  const defaultResumeName = resumes?.find(
+    (r) => r._id === defaultResumeId,
+  )?.name;
 
   return (
     <>
@@ -84,7 +95,13 @@ export function MobileAddButton({ addJob }: { addJob: AddJobState }) {
               disabled={loading || !url.trim()}
               className="w-full"
             >
-              {loading && <CircleNotchIcon size={14} weight="light" className="mr-1 animate-spin" />}
+              {loading && (
+                <CircleNotchIcon
+                  size={14}
+                  weight="light"
+                  className="mr-1 animate-spin"
+                />
+              )}
               {loading ? "Adding..." : "Add"}
             </Button>
           </div>

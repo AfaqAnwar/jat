@@ -1,9 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireOwnership } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 import { starResume } from "./lib/resumeDefaults";
 import { assertMaxLength, MAX_SHORT } from "./lib/validators";
-import { rateLimiter } from "./lib/rateLimits";
 
 export const list = query({
   args: {},
@@ -65,7 +65,8 @@ export const save = mutation({
 
     const isAlwaysLatest = prefs?.alwaysUseLatestResume ?? false;
     const hasDefault = existing.some((r) => r.isDefault);
-    const shouldDefault = existing.length === 0 || (!hasDefault && !isAlwaysLatest);
+    const shouldDefault =
+      existing.length === 0 || (!hasDefault && !isAlwaysLatest);
 
     return ctx.db.insert("resumes", {
       userId,

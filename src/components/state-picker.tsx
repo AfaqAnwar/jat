@@ -1,12 +1,5 @@
-import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -15,8 +8,15 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { showSuccess } from "@/lib/toast-utils";
 import { US_STATES } from "@/lib/us-states";
+import { api } from "../../convex/_generated/api";
 
 export function StatePicker({
   open,
@@ -46,12 +46,19 @@ export function StatePicker({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) setSearch(""); onOpenChange(v); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setSearch("");
+        onOpenChange(v);
+      }}
+    >
       <DialogContent className="rounded-none sm:max-w-sm p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>Your Location</DialogTitle>
           <p className="text-xs text-muted-foreground">
-            When a job lists multiple locations, we'll auto-select the one in your state.
+            When a job lists multiple locations, we'll auto-select the one in
+            your state.
           </p>
         </DialogHeader>
 
@@ -59,6 +66,7 @@ export function StatePicker({
           <div className="flex items-center justify-between border-t px-4 py-3">
             <span className="text-sm">{currentName}</span>
             <button
+              type="button"
               onClick={() => void handleSelect(currentState)}
               className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
             >
@@ -86,7 +94,9 @@ export function StatePicker({
                     className="cursor-pointer"
                   >
                     <span className="flex-1">{name}</span>
-                    <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground">{abbr}</span>
+                    <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground">
+                      {abbr}
+                    </span>
                   </CommandItem>
                 ))}
               </CommandGroup>

@@ -1,20 +1,26 @@
-import { useRef, useState } from "react";
+import {
+  CheckIcon,
+  PencilSimpleIcon,
+  StarIcon,
+  TrashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { ResumeId } from "@/lib/types";
+import { useRef, useState } from "react";
+import { ResumePreviewLink } from "@/components/resume-preview-link";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ResumePreviewLink } from "@/components/resume-preview-link";
-import { showSuccess, showError, checkMaxLength } from "@/lib/toast-utils";
-import { TrashIcon, PencilSimpleIcon, CheckIcon, XIcon, StarIcon } from "@phosphor-icons/react";
-import { formatFileName, deduplicateName } from "@/lib/format-file";
+import { deduplicateName, formatFileName } from "@/lib/format-file";
+import { checkMaxLength, showError, showSuccess } from "@/lib/toast-utils";
+import type { ResumeId } from "@/lib/types";
+import { api } from "../../convex/_generated/api";
 
 export function ResumeManager({
   open,
@@ -30,7 +36,9 @@ export function ResumeManager({
   const renameResume = useMutation(api.resumes.rename);
   const removeResume = useMutation(api.resumes.remove);
   const setDefaultResume = useMutation(api.resumes.setDefault);
-  const setAlwaysUseLatest = useMutation(api.preferences.setAlwaysUseLatestResume);
+  const setAlwaysUseLatest = useMutation(
+    api.preferences.setAlwaysUseLatestResume,
+  );
 
   const [uploading, setUploading] = useState(false);
   const [hasFile, setHasFile] = useState(false);
@@ -80,7 +88,9 @@ export function ResumeManager({
     setHasFile(false);
   };
 
-  const handleMobileFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMobileFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     await uploadFile(file);
@@ -122,7 +132,13 @@ export function ResumeManager({
   const showStars = (resumes?.length ?? 0) > 1 && !isAlwaysLatest;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) setPendingResumeId(null); onOpenChange(v); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setPendingResumeId(null);
+        onOpenChange(v);
+      }}
+    >
       <DialogContent className="max-h-[85dvh] rounded-none sm:max-w-md flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Resumes</DialogTitle>
@@ -197,6 +213,7 @@ export function ResumeManager({
             <p className="text-xs text-muted-foreground">
               Using latest upload as default.{" "}
               <button
+                type="button"
                 onClick={() => void setAlwaysUseLatest({ enabled: false })}
                 className="cursor-pointer underline hover:text-foreground"
               >
@@ -227,12 +244,14 @@ export function ResumeManager({
                           autoFocus
                         />
                         <button
+                          type="button"
                           onClick={() => void handleRename(r._id)}
                           className="cursor-pointer p-1 text-muted-foreground hover:text-foreground"
                         >
                           <CheckIcon size={14} weight="light" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => setEditingId(null)}
                           className="cursor-pointer p-1 text-muted-foreground hover:text-foreground"
                         >
@@ -243,27 +262,44 @@ export function ResumeManager({
                       <>
                         {showStars && (
                           <button
+                            type="button"
                             onClick={() => void handleSetDefault(r._id)}
                             className="cursor-pointer shrink-0 p-0.5"
-                            title={r.isDefault ? "Default resume" : "Set as default"}
-                            aria-label={r.isDefault ? "Default resume" : "Set as default"}
+                            title={
+                              r.isDefault ? "Default resume" : "Set as default"
+                            }
+                            aria-label={
+                              r.isDefault ? "Default resume" : "Set as default"
+                            }
                           >
                             <StarIcon
                               size={14}
                               weight={r.isDefault ? "fill" : "light"}
-                              className={r.isDefault ? "text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground"}
+                              className={
+                                r.isDefault
+                                  ? "text-foreground"
+                                  : "text-muted-foreground/40 hover:text-muted-foreground"
+                              }
                             />
                           </button>
                         )}
                         <div className="flex-1 min-w-0">
                           <span className="block truncate">{r.name}</span>
                           <span className="block text-[11px] text-muted-foreground/60">
-                            {new Date(r._creationTime).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                            {new Date(r._creationTime).toLocaleDateString(
+                              undefined,
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <ResumePreviewLink storageId={r.storageId} />
                           <button
+                            type="button"
                             onClick={() => {
                               setEditingId(r._id);
                               setEditName(r.name);
@@ -274,6 +310,7 @@ export function ResumeManager({
                             <PencilSimpleIcon size={14} weight="light" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => void handleDelete(r._id)}
                             className="cursor-pointer p-1 text-muted-foreground hover:text-destructive"
                             title="Delete"
@@ -293,4 +330,3 @@ export function ResumeManager({
     </Dialog>
   );
 }
-
