@@ -25,6 +25,15 @@ type ParseResult = {
   error?: string;
 };
 
+type JobHints = {
+  title?: string;
+  company?: string;
+  locations?: string[];
+  workModel?: ParseResult["locationType"];
+  datePosted?: string;
+  salary?: string;
+};
+
 const EMPTY_RESULT: ParseResult = {
   role: "",
   sector: "",
@@ -157,11 +166,11 @@ export const fromUrl = action({
     const aiResult = await callGemini(page.text);
     if (!aiResult) return { ...EMPTY_RESULT, error: "parse" };
 
-    return normalizeAiResult(aiResult);
+    return normalizeAiResult(aiResult, page.hints);
   },
 });
 
-type FetchResult = { text: string } | { error: string };
+type FetchResult = { text: string; hints?: JobHints } | { error: string };
 
 async function fetchPageText(url: string): Promise<FetchResult> {
   for (const tryApi of [tryGreenhouseApi, tryLeverApi]) {
@@ -233,9 +242,14 @@ async function fetchUrl(url: string): Promise<FetchResult> {
   if (!html || html.length < 200) return { error: "empty" };
 
   let text = htmlToText(html);
+  const hints = getJobHints(url, html, text);
 
   if (text.length < 100) {
     return { error: isSpaHash ? "spa" : "empty" };
+  }
+
+  if (hints) {
+    text = `${formatJobHints(hints)}\n\n${text}`;
   }
 
   if (text.length > 6000) {
@@ -245,7 +259,96 @@ async function fetchUrl(url: string): Promise<FetchResult> {
     }
   }
 
-  return { text: text.slice(0, 6000) };
+  return { text: text.slice(0, 6000), hints: hints ?? undefined };
+}
+
+function getJobHints(url: string, html: string, text: string): JobHints | null {
+  const hostname = new URL(url).hostname.replace(/^www\./, "");
+  if (!hostname.endsWith("linkedin.com")) return null;
+
+  const hints: JobHints = {};
+  const titleFromMeta = extractMetaContent(html, "og:title")
+    ?.replace(/\s+in\s+[A-Za-z .'-]+,\s*[A-Z]{2}\s*$/i, "")
+    .trim();
+  if (titleFromMeta) hints.title = titleFromMeta;
+
+  const applyMatch = text.match(
+    /join to apply for the\s+(.+?)\s+role at\s+([A-Z][\w&.'’ -]{1,80})\b/i,
+  );
+  if (applyMatch) {
+    hints.title = applyMatch[1].trim();
+    hints.company = applyMatch[2].trim();
+  }
+
+  const company = hints.company ? escapeRegExp(hints.company) : null;
+  const companyLocationPattern = company
+    ? new RegExp(
+        `${company}\\s+([A-Z][A-Za-z .'-]+,\\s*[A-Z]{2})\\s+(?:[·•-]\\s*)?(Reposted\\s+)?((?:\\d+\\s+)?(?:day|week|month|hour|minute)s?\\s+ago|today|yesterday|just now|just posted)`,
+        "i",
+      )
+    : null;
+  const companyLocationMatch = companyLocationPattern?.exec(text);
+  const looseLocationMatch = text.match(
+    /\b([A-Z][A-Za-z .'-]+,\s*[A-Z]{2})\s+(?:[·•-]\s*)?(Reposted\s+)?((?:\d+\s+)?(?:day|week|month|hour|minute)s?\s+ago|today|yesterday|just now|just posted)\b/i,
+  );
+  const locationMatch = companyLocationMatch ?? looseLocationMatch;
+  if (locationMatch) {
+    hints.locations = [cleanLinkedInLocationHint(locationMatch[1])];
+    hints.datePosted = `${locationMatch[2] ?? ""}${locationMatch[3]}`.trim();
+  }
+
+  const salary = extractSalaryRange(text);
+  if (salary) hints.salary = salary;
+
+  const lower = text.toLowerCase();
+  hints.workModel = lower.includes("remote")
+    ? "remote"
+    : lower.includes("hybrid")
+      ? "hybrid"
+      : "onsite";
+
+  return Object.keys(hints).length > 0 ? hints : null;
+}
+
+function extractMetaContent(html: string, property: string): string | null {
+  const pattern = new RegExp(
+    `<meta\\s+[^>]*(?:property|name)=["']${escapeRegExp(property)}["'][^>]*content=["']([^"']+)["'][^>]*>`,
+    "i",
+  );
+  const match = html.match(pattern);
+  return match ? decodeEntities(match[1]) : null;
+}
+
+function formatJobHints(hints: JobHints): string {
+  const lines = ["Structured job hints from page metadata:"];
+  if (hints.title) lines.push(`Job Title: ${hints.title}`);
+  if (hints.company) lines.push(`Company: ${hints.company}`);
+  if (hints.locations?.length) lines.push(`Location: ${hints.locations[0]}`);
+  if (hints.workModel) lines.push(`Work Model: ${hints.workModel}`);
+  if (hints.datePosted) lines.push(`Date Posted: ${hints.datePosted}`);
+  if (hints.salary) lines.push(`Salary: ${hints.salary}`);
+  return lines.join("\n");
+}
+
+function cleanLinkedInLocationHint(location: string): string {
+  const parts = location.split(",");
+  if (parts.length < 2) return location.trim();
+
+  let city = parts[0].trim();
+  const state = parts[1].trim();
+
+  if (/\bNew York$/i.test(city)) {
+    city = "New York";
+  } else {
+    const words = city.split(/\s+/);
+    if (words.length > 3) city = words.slice(-2).join(" ");
+  }
+
+  return `${city}, ${state}`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function parseJsonJobResponse(body: string): FetchResult {
@@ -330,18 +433,25 @@ async function callGemini(
   }
 }
 
-function normalizeAiResult(parsed: Record<string, unknown>): ParseResult {
-  const rawDate = String(parsed.datePosted ?? "");
+function normalizeAiResult(
+  parsed: Record<string, unknown>,
+  hints?: JobHints,
+): ParseResult {
+  const rawDate = String(parsed.datePosted ?? hints?.datePosted ?? "");
   const datePosted = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
     ? rawDate
     : resolveRelativeDate(rawDate);
 
-  const locations = coerceLocationList(parsed.locations ?? parsed.location)
+  const locations = coerceLocationList(
+    parsed.locations ?? parsed.location ?? hints?.locations,
+  )
     .map(normalizeLocation)
     .map(cleanLocationName)
     .filter(Boolean);
 
-  const rawModel = String(parsed.workModel ?? "").toLowerCase();
+  const rawModel = String(
+    parsed.workModel ?? hints?.workModel ?? "",
+  ).toLowerCase();
   const locationType: ParseResult["locationType"] =
     rawModel === "remote"
       ? "remote"
@@ -353,16 +463,25 @@ function normalizeAiResult(parsed: Record<string, unknown>): ParseResult {
     locations.push("US");
   }
 
-  const { role, sector } = splitRoleAndSector(
-    String(parsed.role ?? ""),
-    String(parsed.sector ?? ""),
-  );
+  const parsedRole = String(parsed.role ?? hints?.title ?? "");
+  const parsedSector = String(parsed.sector ?? "");
+  const normalized = splitRoleAndSector(parsedRole, parsedSector);
+  const titleNormalized = hints?.title
+    ? splitRoleAndSector(hints.title, "")
+    : undefined;
+  const { role, sector } =
+    titleNormalized &&
+    normalized.role === titleNormalized.role &&
+    normalized.sector &&
+    titleNormalized.sector.endsWith(normalized.sector)
+      ? titleNormalized
+      : normalized;
 
   return {
     role,
     sector,
-    company: String(parsed.company ?? ""),
-    salary: extractSalaryRange(String(parsed.salary ?? "")),
+    company: String(parsed.company ?? hints?.company ?? ""),
+    salary: extractSalaryRange(String(parsed.salary ?? hints?.salary ?? "")),
     locations,
     locationType,
     datePosted,
