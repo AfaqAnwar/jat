@@ -4,7 +4,7 @@ import {
   GithubLogoIcon,
   GoogleLogoIcon,
   ListChecksIcon,
-  NotePencilIcon,
+  MagicWandIcon,
   RowsIcon,
 } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -77,11 +77,11 @@ function LoginLanding({
       <MobileHeader signingInWith={signingInWith} onSignIn={onSignIn} />
       <section className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_340px] lg:py-8">
         <div className="max-w-3xl">
-          <h1 className="text-4xl font-bold tracking-normal sm:text-5xl">
+          <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
             Applications, resumes, next steps.
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            A small workspace for keeping a personal job search readable.
+            A small free workspace for keeping a personal job search readable.
           </p>
           <CapabilityGrid />
         </div>
@@ -148,12 +148,7 @@ function SignInPanel({
     >
       <div className="mb-5">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold">Open workspace</h2>
-            <span className="border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Free
-            </span>
-          </div>
+          <h2 className="text-sm font-bold">Open workspace</h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             Sign in to continue.
           </p>
@@ -187,19 +182,19 @@ function CapabilityGrid() {
   return (
     <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
       <Capability
-        icon={<NotePencilIcon size={16} weight="light" />}
-        title="URL"
-        detail="Save roles as they appear."
+        icon={<MagicWandIcon size={16} weight="light" />}
+        title="Autofill"
+        detail="Just paste the URL."
       />
       <Capability
         icon={<RowsIcon size={16} weight="light" />}
-        title="Resume"
-        detail="Keep variants close at hand."
+        title="Resumes"
+        detail="Match each role."
       />
       <Capability
         icon={<ListChecksIcon size={16} weight="light" />}
         title="Status"
-        detail="Track what needs attention."
+        detail="Know what's next."
       />
     </div>
   );
