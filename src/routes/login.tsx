@@ -76,7 +76,7 @@ function LoginLanding({
     <main className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-4 py-6 sm:px-6 sm:py-8">
       <MobileHeader signingInWith={signingInWith} onSignIn={onSignIn} />
       <section className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_340px] lg:py-8">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl sm:max-lg:mx-auto sm:max-lg:text-center">
           <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
             Applications, resumes, next steps.
           </h1>
@@ -146,7 +146,14 @@ function SignInPanel({
           : "w-full border border-border bg-background p-4 sm:p-5"
       }
     >
-      <div className="mb-5">
+      <div className="relative mb-5">
+        {variant === "panel" ? (
+          <img
+            src={`${import.meta.env.BASE_URL}JAJT.png`}
+            alt="JAT"
+            className="absolute top-0 right-0 h-8 w-8"
+          />
+        ) : null}
         <div>
           <h2 className="text-sm font-bold">Open workspace</h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -180,7 +187,7 @@ function SignInPanel({
 
 function CapabilityGrid() {
   return (
-    <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+    <div className="mt-8 grid max-w-2xl gap-3 sm:max-lg:mx-auto sm:grid-cols-3">
       <Capability
         icon={<MagicWandIcon size={16} weight="light" />}
         title="Autofill"
@@ -211,7 +218,9 @@ function Capability({
 }) {
   return (
     <div className="border border-border p-3">
-      <div className="mb-4 text-muted-foreground">{icon}</div>
+      <div className="mb-4 text-muted-foreground sm:max-lg:flex sm:max-lg:justify-center">
+        {icon}
+      </div>
       <div className="text-xs font-bold">{title}</div>
       <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
     </div>
